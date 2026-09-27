@@ -165,6 +165,28 @@ function render(){
     </article>`).join(''):'<div class="empty">Задач пока нет.<br>Нажмите «＋ Добавить задачу».</div>';
   setStatus('Всего задач: '+tasks.length+(tasks.filter(t=>t.completed).length?' · выполнено: '+tasks.filter(t=>t.completed).length:''));
 }
+function setupKeyboardNavigation(){
+  const forms=document.querySelectorAll('form');
+  forms.forEach(form=>{
+    const fields=[...form.querySelectorAll('input:not([type="hidden"]):not([type="checkbox"]):not([type="submit"]), textarea')];
+    fields.forEach((field,i)=>{
+      if(field.tagName==='TEXTAREA'){
+        field.setAttribute('enterkeyhint','enter');
+        return;
+      }
+      field.setAttribute('enterkeyhint',i<fields.length-1?'next':'done');
+      field.addEventListener('keydown',e=>{
+        if(e.key==='Enter'){
+          e.preventDefault();
+          const next=fields[i+1];
+          if(next){next.focus();next.select?.();}
+          else field.blur();
+        }
+      });
+    });
+  });
+}
+
 function openModal(t=null){
   $('taskId').value=t?.id||'';$('task').value=t?.task||'';$('student').value=t?.student_name||'';$('className').value=t?.class_name||'';$('notes').value=t?.notes||'';
   $('modalTitle').textContent=t?'Изменить задачу':'Новая задача';$('formError').textContent='';show('modal',true);setTimeout(()=>$('task').focus(),50);
