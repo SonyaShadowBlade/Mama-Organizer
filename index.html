@@ -101,6 +101,7 @@ input:focus,textarea:focus{border-color:#667eea;box-shadow:0 0 0 3px #667eea18}t
 
 <script>
 const APP_VERSION = "0.1.9";
+history.replaceState({appRoot:true},'',window.location.pathname);
 function showVersionCheck(text, success=false){const bg=$("versionCheckBg"),textEl=$("versionCheckText"),spinner=$("versionCheckSpinner");if(!bg||!textEl||!spinner)return;bg.style.display="flex";textEl.textContent=text;spinner.style.display=success?"none":"block"}
 function closeVersionCheck(){const bg=$("versionCheckBg");if(bg)bg.style.display="none"}
 async function checkVersionNow(){showVersionCheck("Проверяем актуальность программы...");try{const response=await fetch("version.json?check="+Date.now(),{cache:"no-store",headers:{"Cache-Control":"no-cache","Pragma":"no-cache"}});if(!response.ok){showVersionCheck("Не удалось получить версию с GitHub Pages.",true);setTimeout(closeVersionCheck,1800);return}const remote=await response.json();const remoteVersion=remote&&remote.version;if(!remoteVersion){showVersionCheck("GitHub Pages не вернул номер версии.",true);setTimeout(closeVersionCheck,1800);return}if(remoteVersion===APP_VERSION){showVersionCheck("✅ Версия актуальна: "+APP_VERSION+". Обновляем страницу...");}else{showVersionCheck("GitHub: "+remoteVersion+" | Загружена: "+APP_VERSION+". Обновляем страницу...")}setTimeout(()=>{window.location.replace(window.location.origin+window.location.pathname+"?refresh="+Date.now())},700)}catch(error){console.warn("Не удалось проверить версию:",error);showVersionCheck("Не удалось проверить версию. Проверьте соединение.",true);setTimeout(closeVersionCheck,1800)}}
@@ -222,8 +223,20 @@ function getDeadlineValue(){
   return date.toISOString();
 }
 let modalHistoryOpen=false;
+let backPressAt=0;
 window.addEventListener('popstate',()=>{
-  if(modalHistoryOpen){modalHistoryOpen=false;show('modal',false)}
+  if(modalHistoryOpen){modalHistoryOpen=false;show('modal',false);return}
+  if(!$('app').classList.contains('hidden')){
+    const now=Date.now();
+    if(now-backPressAt<1800){
+      history.back();
+      return;
+    }
+    backPressAt=now;
+    history.pushState({appRoot:true},'',window.location.pathname);
+    setStatus('Нажмите «Назад» ещё раз, чтобы выйти из приложения');
+    setTimeout(()=>{if(Date.now()-backPressAt>=1800)$('status').textContent=''},1900);
+  }
 });
 const VAPID_PUBLIC_KEY='BF1gbfINyUjD4fYP8KkOEjCahULPCPLCbNiT8p4XZU7veLJfEFBnse_B4MzHnC6T0fDLJq2NLy0FgvjIwuRHWuE';
 function urlBase64ToUint8Array(base64String){const padding='='.repeat((4-base64String.length%4)%4);const base64=(base64String+padding).replace(/-/g,'+').replace(/_/g,'/');const raw=atob(base64);return Uint8Array.from([...raw].map(c=>c.charCodeAt(0)));}
