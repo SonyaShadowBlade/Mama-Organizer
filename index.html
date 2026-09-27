@@ -151,31 +151,20 @@ function render(){
   if(classes.includes(oldClass))cf.value=oldClass;
   if(sf.value)a=a.filter(t=>(t.student_name||'').trim()===sf.value);
   if(cf.value)a=a.filter(t=>(t.class_name||'').trim()===cf.value);
-  if(!sf.value){
-    const visibleStudents=[...new Set(a.map(t=>(t.student_name||'').trim()).filter(Boolean))].sort((x,y)=>x.localeCompare(y,'ru',{sensitivity:'base'}));
-    $('list').innerHTML=visibleStudents.length?visibleStudents.map(name=>{
-      const studentTasks=a.filter(t=>(t.student_name||'').trim()===name);
-      const count=studentTasks.length;
-      const cls=[...new Set(studentTasks.map(t=>(t.class_name||'').trim()).filter(Boolean))].join(', ');
-      return '<article class="task student-row" onclick="selectStudent('+JSON.stringify(name)+')"><div class="task-name">'+esc(name)+'</div><div class="meta">'+(cls?esc(cls)+' · ':'')+count+' '+(count===1?'задача':'задач')+'</div></article>';
-    }).join(''):'<div class="empty">Учеников пока нет.<br>Добавьте задачу с именем ученика.</div>';
-  }else{
-    $('list').innerHTML=a.length?a.map(t=>`
-      <article class="task ${t.completed?'done':''}" onclick="openTaskFromCard(event,'${t.id}')">
-        <div class="task-head">
-          <input class="check" type="checkbox" ${t.completed?'checked':''} onchange="toggleTask('${t.id}',this.checked)" aria-label="Выполнено">
-          <div class="task-main">
-            <div class="task-name">${esc(t.task)}</div>
-            ${t.student_name||t.class_name?'<div class="meta">'+esc(t.student_name)+(t.student_name&&t.class_name?' · ':'')+esc(t.class_name)+'</div>':''}
-            ${t.notes?'<div class="notes">'+esc(t.notes)+'</div>':''}
-            <div class="task-actions"><button class="btn secondary" onclick="editTask('${t.id}')">Изменить</button><button class="btn danger" onclick="deleteTask('${t.id}')">Удалить</button></div>
-          </div>
+  $('list').innerHTML=a.length?a.map(t=>`
+    <article class="task ${t.completed?'done':''}" onclick="openTaskFromCard(event,\'${t.id}\')">
+      <div class="task-head">
+        <input class="check" type="checkbox" ${t.completed?'checked':''} onchange="toggleTask('${t.id}',this.checked)" aria-label="Выполнено">
+        <div class="task-main">
+          <div class="task-name">${esc(t.task)}</div>
+          ${t.student_name||t.class_name?'<div class="meta">'+esc(t.student_name)+(t.student_name&&t.class_name?' · ':'')+esc(t.class_name)+'</div>':''}
+          ${t.notes?'<div class="notes">'+esc(t.notes)+'</div>':''}
+          <div class="task-actions"><button class="btn secondary" onclick="editTask('${t.id}')">Изменить</button><button class="btn danger" onclick="deleteTask('${t.id}')">Удалить</button></div>
         </div>
-      </article>`).join(''):'<div class="empty">Задач у этого ученика нет.</div>';
-  }
+      </div>
+    </article>`).join(''):'<div class="empty">Задач пока нет.<br>Нажмите «＋ Добавить задачу».</div>';
   setStatus('Всего задач: '+tasks.length+(tasks.filter(t=>t.completed).length?' · выполнено: '+tasks.filter(t=>t.completed).length:''));
 }
-window.selectStudent=name=>{$('studentFilter').value=name;render()};
 function openModal(t=null){
   $('taskId').value=t?.id||'';$('task').value=t?.task||'';$('student').value=t?.student_name||'';$('className').value=t?.class_name||'';$('notes').value=t?.notes||'';
   $('modalTitle').textContent=t?'Изменить задачу':'Новая задача';$('formError').textContent='';show('modal',true);setTimeout(()=>$('task').focus(),50);
