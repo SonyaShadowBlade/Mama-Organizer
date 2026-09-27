@@ -221,6 +221,7 @@ function getDeadlineValue(){
   if(date.getFullYear()!==Number(y)||date.getMonth()!==Number(m)-1||date.getDate()!==Number(d))return null;
   return date.toISOString();
 }
+let modalHistoryOpen=false;
 window.addEventListener('popstate',()=>{
   if(modalHistoryOpen){modalHistoryOpen=false;show('modal',false)}
 });
@@ -236,7 +237,7 @@ function openModal(t=null){
   setDeadlineValue(t?.deadline||null);setNotificationOptions(t?.notification_enabled,t?.notification_offsets||[]);
   $('modalTitle').textContent=t?'Изменить задачу':'Новая задача';$('formError').textContent='';show('modal',true);setTimeout(()=>$('task').focus(),50);
 }
-function closeModal(){show('modal',false);history.replaceState(null,'',window.location.pathname)}
+function closeModal(){show('modal',false);modalHistoryOpen=false;history.replaceState(null,'',window.location.pathname)}
 async function saveTask(e){
   e.preventDefault();$('formError').textContent='';
   const offsets=getNotificationOffsets();const notifyEnabled=$('notifyEnabled').checked&&offsets.length>0;
