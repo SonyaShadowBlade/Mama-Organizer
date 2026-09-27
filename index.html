@@ -186,7 +186,7 @@ function render(){
       <div class="task-head">
         <input class="check" type="checkbox" ${t.completed?'checked':''} onchange="toggleTask('${t.id}',this.checked)" aria-label="Выполнено">
         <div class="task-main">
-          <div class="task-name">${esc(t.student_name)}</div><div class="urgency-badge">Срочность: ${esc(t.urgency==='срочно'?'Срочно':(t.urgency||'Посредственно'))}</div>
+          <div class="task-name">${esc(t.student_name)}</div>
           <div class="meta">${esc(t.task)}${t.class_name?' · '+esc(t.class_name):''}</div>
           ${t.notes?'<div class="notes">'+esc(t.notes)+'</div>':''}
           ${t.deadline?'<div class="card-deadlines"><div class="card-deadline-row"><span class="card-deadline-label">DEADLINE</span><span class="card-deadline-value">'+formatDeadline(t.deadline)+'</span></div><div class="card-deadline-row"><span class="card-deadline-label">TimeToBOOM</span><span class="card-deadline-value" data-timer-id="'+t.id+'">'+timeToBoom(t.deadline)+'</span></div></div>':''}
