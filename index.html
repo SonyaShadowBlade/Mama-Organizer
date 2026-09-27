@@ -312,7 +312,7 @@ sb.auth.onAuthStateChange((_event,s)=>{
 });
 
 (async()=>{
-  await checkForProgramUpdate();
+  checkForProgramUpdate().catch(error=>console.warn("Тихая проверка обновления:",error));
   const {data}=await sb.auth.getSession();
   session=data.session;
   if(session){
