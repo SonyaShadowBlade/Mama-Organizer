@@ -162,14 +162,19 @@ $('loginForm').addEventListener('submit',async e=>{
   e.preventDefault();$('authError').textContent='Вход…';
   const login=$('email').value.trim();
   const remember=$('rememberMe').checked;
-  const {data,error}=await supabase.auth.signInWithPassword({email:login,password:$('password').value});
-  if(error){$('authError').textContent=error.message;return}
   if(remember){
     localStorage.setItem(REMEMBER_KEY,'1');
     localStorage.setItem(LOGIN_KEY,login);
   }else{
     localStorage.removeItem(REMEMBER_KEY);
     localStorage.removeItem(LOGIN_KEY);
+  }
+  const {data,error}=await supabase.auth.signInWithPassword({email:login,password:$('password').value});
+  if(error){
+    localStorage.removeItem(REMEMBER_KEY);
+    localStorage.removeItem(LOGIN_KEY);
+    $('authError').textContent=error.message;
+    return;
   }
   session=data.session;show('auth',false);show('app',true);$('userLine').textContent=session.user.email||'';await loadTasks();
 });
