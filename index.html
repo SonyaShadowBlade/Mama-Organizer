@@ -40,6 +40,7 @@ input:focus,textarea:focus{border-color:#667eea;box-shadow:0 0 0 3px #667eea18}t
 .modal-actions{display:flex;gap:8px;margin-top:16px}.modal-actions .btn{flex:1}
 @media(min-width:700px){.modal{align-items:center;padding:20px}.modal-card{border-radius:20px}.wrap{padding-top:28px}}
 @media(max-width:520px){.wrap{padding:10px}.top{top:6px}.title{font-size:22px}.actions .btn{min-width:0}.auth-card{margin:6vh 10px;padding:22px}}
+  .card-deadlines{margin-top:8px;display:grid;gap:4px;font-size:13px}.card-deadline-row{display:grid;grid-template-columns:105px 1fr;gap:8px;align-items:center}.card-deadline-label{font-weight:800;color:#6b7280}.card-deadline-value{font-weight:700;color:#374151}.task.urgent .card-deadline-value{color:#8a5700}.task.terminate .card-deadline-value{color:#fff}
 </style>
 </head>
 <body>
@@ -98,7 +99,7 @@ input:focus,textarea:focus{border-color:#667eea;box-shadow:0 0 0 3px #667eea18}t
 </div>
 
 <script>
-const APP_VERSION = "0.1.5";
+const APP_VERSION = "0.1.6";
 function showVersionCheck(text, success=false){const bg=$("versionCheckBg"),textEl=$("versionCheckText"),spinner=$("versionCheckSpinner");if(!bg||!textEl||!spinner)return;bg.style.display="flex";textEl.textContent=text;spinner.style.display=success?"none":"block"}
 function closeVersionCheck(){const bg=$("versionCheckBg");if(bg)bg.style.display="none"}
 async function checkVersionNow(){showVersionCheck("Проверяем актуальность программы...");try{const response=await fetch("version.json?check="+Date.now(),{cache:"no-store",headers:{"Cache-Control":"no-cache","Pragma":"no-cache"}});if(!response.ok){showVersionCheck("Не удалось получить версию с GitHub Pages.",true);setTimeout(closeVersionCheck,1800);return}const remote=await response.json();const remoteVersion=remote&&remote.version;if(!remoteVersion){showVersionCheck("GitHub Pages не вернул номер версии.",true);setTimeout(closeVersionCheck,1800);return}if(remoteVersion===APP_VERSION){showVersionCheck("✅ Версия актуальна: "+APP_VERSION+". Обновляем страницу...");}else{showVersionCheck("GitHub: "+remoteVersion+" | Загружена: "+APP_VERSION+". Обновляем страницу...")}setTimeout(()=>{window.location.replace(window.location.origin+window.location.pathname+"?refresh="+Date.now())},700)}catch(error){console.warn("Не удалось проверить версию:",error);showVersionCheck("Не удалось проверить версию. Проверьте соединение.",true);setTimeout(closeVersionCheck,1800)}}
@@ -163,6 +164,10 @@ async function loadTasks(){
   if(error){setStatus('Не удалось загрузить задачи: '+error.message);return}
   tasks=data||[];tasks.sort((a,b)=>{const p={TERMINATE:0,'срочно':1,'Посредственно':2};return (p[a.urgency]??2)-(p[b.urgency]??2)||new Date(b.created_at)-new Date(a.created_at)});render();
 }
+function formatDeadline(value){const d=new Date(value);if(Number.isNaN(d.getTime()))return '—';return d.toLocaleDateString('ru-RU',{day:'2-digit',month:'2-digit',year:'numeric'})+' '+d.toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'});}
+function timeToBoom(value){const ms=new Date(value).getTime()-Date.now();if(ms<=0)return '00 ч 00 мин';const total=Math.floor(ms/60000),h=Math.floor(total/60),m=total%60;return String(h).padStart(2,'0')+' ч '+String(m).padStart(2,'0')+' мин';}
+function updateDeadlineTimers(){document.querySelectorAll('[data-timer-id]').forEach(el=>{const t=tasks.find(x=>x.id===el.dataset.timerId);if(t?.deadline)el.textContent=timeToBoom(t.deadline);});}
+setInterval(updateDeadlineTimers,1000);
 function render(){
   let a=[...tasks];
   const students=[...new Set(tasks.map(t=>(t.student_name||'').trim()).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'ru',{sensitivity:'base'}));
@@ -183,6 +188,7 @@ function render(){
           <div class="task-name">${esc(t.student_name)}</div><div class="urgency-badge">Срочность: ${esc(t.urgency==='срочно'?'Срочно':(t.urgency||'Посредственно'))}</div>
           <div class="meta">${esc(t.task)}${t.class_name?' · '+esc(t.class_name):''}</div>
           ${t.notes?'<div class="notes">'+esc(t.notes)+'</div>':''}
+          ${t.deadline?'<div class="card-deadlines"><div class="card-deadline-row"><span class="card-deadline-label">DEADLINE</span><span class="card-deadline-value">'+formatDeadline(t.deadline)+'</span></div><div class="card-deadline-row"><span class="card-deadline-label">TimeToBOOM</span><span class="card-deadline-value" data-timer-id="'+t.id+'">'+timeToBoom(t.deadline)+'</span></div></div>':''}
           <div class="task-actions"><button class="btn secondary" onclick="editTask('${t.id}')">Изменить</button><button class="btn danger" onclick="deleteTask('${t.id}')">Удалить</button></div>
         </div>
       </div>
