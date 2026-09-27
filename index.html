@@ -1,2 +1,329 @@
 <!doctype html>
 <html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#111827">
+<title>Органайзер</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#172033;background:#f3f5f8}
+*{box-sizing:border-box}body{margin:0;min-height:100vh}.hidden{display:none!important}
+button,input,textarea{font:inherit}button{cursor:pointer;border:0}
+#auth,#app{min-height:100vh}.wrap{width:min(760px,100%);margin:auto;padding:18px}
+.auth-card,.top,.task,.modal-card{background:#fff;border:1px solid #e3e7ee;border-radius:18px;box-shadow:0 8px 28px #1118270d}
+.auth-card{max-width:430px;margin:10vh auto;padding:28px}.logo{font-size:28px;font-weight:800;margin-bottom:8px}
+.muted{color:#687386}.field{display:grid;gap:7px;margin:14px 0}.field label{font-weight:650;font-size:14px}
+input,textarea{width:100%;border:1px solid #d5dbe5;border-radius:12px;padding:12px 13px;background:#fff;outline:none}
+input:focus,textarea:focus{border-color:#667eea;box-shadow:0 0 0 3px #667eea18}textarea{min-height:90px;resize:vertical}
+.password-wrap{position:relative}.password-wrap input{padding-right:48px}.password-eye{position:absolute;right:6px;top:50%;transform:translateY(-50%);width:38px;height:38px;border-radius:9px;background:transparent;color:#687386;font-size:18px;padding:0}.password-eye:hover{background:#eef1f5}
+.btn{border-radius:12px;padding:12px 16px;font-weight:700}
+.version-check-bg{position:fixed;inset:0;background:#11182780;display:none;align-items:center;justify-content:center;z-index:50;padding:20px}.version-check-modal{width:min(430px,100%);background:#fff;border-radius:20px;padding:24px;text-align:center;box-shadow:0 16px 50px #11182733}.version-check-title{font-size:20px;font-weight:800;margin-bottom:12px}.version-check-text{color:#4b5563;line-height:1.45}.version-check-spinner{width:34px;height:34px;border:4px solid #dbe2ea;border-top-color:#111827;border-radius:50%;margin:0 auto 16px;animation:versionSpin .8s linear infinite}@keyframes versionSpin{to{transform:rotate(360deg)}}.primary{background:#111827;color:#fff}.secondary{background:#eef1f5;color:#172033}.danger{background:#fee2e2;color:#991b1b}
+.auth-btn{width:100%;margin-top:8px}.remember{display:flex;align-items:center;gap:9px;margin:12px 0 2px;font-size:14px;color:#4b5563;cursor:pointer;user-select:none}.remember input{width:18px;height:18px;margin:0;accent-color:#111827}
+.error{color:#b42318;font-size:14px;min-height:20px;margin-top:10px}
+.top{padding:16px;margin-bottom:14px;position:sticky;top:10px;z-index:5}
+.topline{display:flex;justify-content:space-between;align-items:center;gap:12px}.title{font-size:24px;font-weight:800}
+.userline{font-size:13px;color:#687386;margin-top:3px;overflow:hidden;text-overflow:ellipsis}
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}.actions .btn{flex:1;min-width:140px}
+.sorts{display:flex;gap:8px;margin-top:10px;overflow:auto;padding-bottom:2px}.sort{white-space:nowrap}
+.sort.active{background:#dfe5ff;color:#273b9b}.filter-select{flex:1;min-width:0;appearance:auto}
+.status{font-size:14px;color:#687386;margin:12px 2px}
+.list{display:grid;gap:10px}.task{padding:15px;border-left:6px solid #22c55e;cursor:pointer;transition:.15s;position:relative;overflow:hidden}.task.done{border-left-color:#ef4444}.task.done{opacity:.65}.task.urgent{border-left-color:#f59e0b;background:#fffaf0}.task.terminate{border-left-color:#b00000;background:#ff1f1f;color:#fff;box-shadow:0 10px 32px #b000004d;border-color:#b00000}.task.terminate .meta,.task.terminate .notes{color:#fff}.task.terminate .task-actions .secondary{background:#fff;color:#8b0000}.task.terminate::before,.task.terminate::after{content:"";position:absolute;bottom:-10px;width:28px;height:44px;background:#ff6a00;border-radius:60% 40% 55% 45%;opacity:.75;filter:blur(1px);transform:rotate(8deg);animation:flame 1.8s ease-in-out infinite alternate}.task.terminate::before{right:18px}.task.terminate::after{right:52px;height:34px;animation-delay:.5s}@keyframes flame{to{transform:rotate(-8deg) scaleY(1.18);opacity:.65}}.task-head{display:flex;gap:12px;align-items:flex-start}
+.check{width:23px;height:23px;flex:0 0 23px;margin-top:2px;accent-color:#111827}
+.task-main{min-width:0;flex:1;position:relative;padding-top:2px}.task-name{font-size:18px;font-weight:750;padding-right:145px;overflow-wrap:anywhere;white-space:pre-wrap}.meta{font-size:14px;color:#687386;margin-top:3px;white-space:pre-wrap}.urgency-badge{position:absolute;top:0;right:0;font-size:13px;font-weight:800;color:#4b5563;background:#eef1f5;border-radius:9px;padding:5px 8px}.task.urgent .urgency-badge{color:#9a5b00;background:#fff0c2}.task.terminate .urgency-badge{color:#fff;background:#9b0000}
+.notes{white-space:pre-wrap;margin-top:10px;color:#394357;overflow-wrap:anywhere}.task-actions{display:flex;gap:7px;margin-top:12px}.task-actions .btn{padding:9px 11px;font-size:14px}
+.empty{text-align:center;padding:38px 15px;color:#687386}
+.modal{position:fixed;inset:0;background:#11182780;display:flex;align-items:flex-end;justify-content:center;z-index:20;padding:0}
+.modal-card{width:min(760px,100%);max-height:94vh;overflow:auto;border-radius:20px 20px 0 0;padding:20px}
+.modal-head{display:flex;justify-content:space-between;align-items:center;gap:10px}.modal-head-left{display:flex;align-items:center;gap:10px;min-width:0}.modal-title{font-size:21px;font-weight:800}.urgency-control{display:flex;align-items:center;gap:7px;margin-left:auto;white-space:nowrap}.urgency-control label{font-size:14px;font-weight:700;color:#4b5563}.urgency-control select{width:auto;padding:9px 10px;border:1px solid #d5dbe5;border-radius:10px;background:#fff}.deadline-control{display:grid;grid-template-columns:auto 1fr 1fr 1fr 1fr;align-items:center;gap:7px;margin-top:12px}.deadline-control label{font-size:14px;font-weight:700;color:#4b5563}.deadline-control select{min-width:0;padding:9px 8px;border:1px solid #d5dbe5;border-radius:10px;background:#fff}
+.icon{background:#eef1f5;border-radius:10px;width:40px;height:40px;font-size:20px}
+.modal-actions{display:flex;gap:8px;margin-top:16px}.modal-actions .btn{flex:1}
+@media(min-width:700px){.modal{align-items:center;padding:20px}.modal-card{border-radius:20px}.wrap{padding-top:28px}}
+@media(max-width:520px){.wrap{padding:10px}.top{top:6px}.title{font-size:22px}.actions .btn{min-width:0}.auth-card{margin:6vh 10px;padding:22px}}
+  .card-deadlines{margin-top:8px;display:grid;gap:4px;font-size:13px}.card-deadline-row{display:grid;grid-template-columns:105px 1fr;gap:8px;align-items:center}.card-deadline-label{font-weight:800;color:#6b7280}.card-deadline-value{font-weight:700;color:#374151}.task.urgent .card-deadline-value{color:#8a5700}.task.terminate .card-deadline-value{color:#fff}
+.notification-control{margin:10px 0;padding:10px;border:1px solid #e5e7eb;border-radius:12px;background:#fafafa}.notification-title{font-weight:900;margin-bottom:9px}.notification-row{display:flex;gap:8px;align-items:center;margin:7px 0;font-weight:700}.notification-row input[type=checkbox]{flex:0 0 auto}.notification-select{min-width:145px;padding:7px 9px;border:1px solid #d1d5db;border-radius:8px;background:#fff}.notification-custom input{width:110px;padding:7px 9px;border:1px solid #d1d5db;border-radius:8px}.push-status{margin-top:6px;font-size:12px;color:#6b7280}</style>
+</head>
+<body>
+<section id="auth">
+  <div class="wrap">
+    <div class="auth-card">
+      <div class="logo">📋 Органайзер</div>
+      <div class="muted">Личные задачи и ученики</div>
+      <form id="loginForm">
+        <div class="field"><label for="email">Логин</label><input id="email" type="text" autocomplete="username" required></div>
+        <div class="field"><label for="password">Пароль</label><div class="password-wrap"><input id="password" type="password" autocomplete="current-password" required><button id="togglePassword" class="password-eye" type="button" aria-label="Показать пароль" title="Показать пароль">👁</button></div></div>
+        <label class="remember"><input id="rememberMe" type="checkbox"> <span>Запомнить меня</span></label>
+        <button class="btn primary auth-btn" type="submit">Войти</button>
+      </form>
+      <div id="authError" class="error"></div>
+    </div>
+  </div>
+</section>
+
+<section id="app" class="hidden">
+  <div class="wrap">
+    <header class="top">
+      <div class="topline"><div><div class="title">Задачи</div><div id="userLine" class="userline"></div></div><div style="display:flex;gap:8px;align-items:center"><button id="versionBtn" class="btn secondary" type="button">ℹ️ Проверить версию</button><button id="logoutBtn" class="btn secondary">Выйти</button></div></div>
+      <div class="actions"><button id="addBtn" class="btn primary">＋ Добавить задачу</button></div>
+      <div class="sorts">
+        <select id="studentFilter" class="btn secondary filter-select"><option value="">Все ученики</option></select>
+        <select id="classFilter" class="btn secondary filter-select"><option value="">Все классы</option></select>
+      </div>
+    </header>
+    <div id="status" class="status"></div>
+    <main id="list" class="list"></main>
+  </div>
+</section>
+
+<div id="modal" class="modal hidden">
+  <div class="modal-card">
+    <div class="modal-head"><div class="modal-head-left"><div id="modalTitle" class="modal-title">Новая задача</div><div class="urgency-control"><label for="urgency">Срочность:</label><select id="urgency"><option value="Посредственно">Посредственно</option><option value="срочно">Срочно</option><option value="TERMINATE">TERMINATE</option></select></div></div><button id="closeModal" class="icon" type="button">×</button></div>
+    <form id="taskForm"><div class="deadline-control"><label for="deadlineDay">DEADLINE</label><select id="deadlineDay" aria-label="День"></select><select id="deadlineMonth" aria-label="Месяц"></select><select id="deadlineYear" aria-label="Год"></select><select id="deadlineTime" aria-label="Время"></select></div>
+      <div class="notification-control"><div class="notification-title">УВЕДОМЛЕНИЯ</div><div class="notification-row"><input id="notifyEnabled" type="checkbox" onchange="ensurePushPermission()"><label for="notifyEnabled">Уведомлять каждые:</label><select id="notifyInterval" class="notification-select"><option value="1440">24 часа</option><option value="720">12 часов</option><option value="360">6 часов</option><option value="180">3 часа</option><option value="120">2 часа</option><option value="60">1 час</option><option value="30">30 минут</option><option value="15">15 минут</option><option value="10">10 минут</option><option value="5">5 минут</option><option value="1">1 минута</option></select></div><div class="notification-row"><input id="notifyCustomEnabled" type="checkbox"><label for="notifyCustomEnabled">Свой интервал:</label><input id="notifyCustom" type="number" min="1" step="1" placeholder="минут"><span>мин</span></div><button id="pushPermissionBtn" type="button" class="btn secondary" onclick="ensurePushPermission()">Разрешить уведомления на этом телефоне</button><div id="pushStatus" class="push-status"></div></div>
+      <input id="taskId" type="hidden">
+      <div class="field"><label for="student">Имя ученика</label><textarea id="student" rows="2" placeholder="Имя и фамилия"></textarea></div>
+      <div class="field"><label for="task">Задача</label><textarea id="task" rows="2" required placeholder="Например: проверить контрольную"></textarea></div>
+      <div class="field"><label for="className">Класс</label><textarea id="className" rows="2" placeholder="Например: 7А"></textarea></div>
+      <div class="field"><label for="notes">Примечание</label><textarea id="notes" placeholder="Дополнительная информация"></textarea></div>
+      <div class="modal-actions"><button class="btn secondary" id="cancelBtn" type="button">Отмена</button><button class="btn primary" type="submit">Сохранить</button></div>
+      <div id="formError" class="error"></div>
+    </form>
+  </div>
+</div>
+
+<div id="versionCheckBg" class="version-check-bg">
+  <div class="version-check-modal">
+    <div class="version-check-spinner" id="versionCheckSpinner"></div>
+    <div class="version-check-title">Проверка версии</div>
+    <div class="version-check-text" id="versionCheckText">Проверяем актуальность программы...</div>
+  </div>
+</div>
+
+<script>
+const APP_VERSION = "0.1.9";
+function showVersionCheck(text, success=false){const bg=$("versionCheckBg"),textEl=$("versionCheckText"),spinner=$("versionCheckSpinner");if(!bg||!textEl||!spinner)return;bg.style.display="flex";textEl.textContent=text;spinner.style.display=success?"none":"block"}
+function closeVersionCheck(){const bg=$("versionCheckBg");if(bg)bg.style.display="none"}
+async function checkVersionNow(){showVersionCheck("Проверяем актуальность программы...");try{const response=await fetch("version.json?check="+Date.now(),{cache:"no-store",headers:{"Cache-Control":"no-cache","Pragma":"no-cache"}});if(!response.ok){showVersionCheck("Не удалось получить версию с GitHub Pages.",true);setTimeout(closeVersionCheck,1800);return}const remote=await response.json();const remoteVersion=remote&&remote.version;if(!remoteVersion){showVersionCheck("GitHub Pages не вернул номер версии.",true);setTimeout(closeVersionCheck,1800);return}if(remoteVersion===APP_VERSION){showVersionCheck("✅ Версия актуальна: "+APP_VERSION+". Обновляем страницу...");}else{showVersionCheck("GitHub: "+remoteVersion+" | Загружена: "+APP_VERSION+". Обновляем страницу...")}setTimeout(()=>{window.location.replace(window.location.origin+window.location.pathname+"?refresh="+Date.now())},700)}catch(error){console.warn("Не удалось проверить версию:",error);showVersionCheck("Не удалось проверить версию. Проверьте соединение.",true);setTimeout(closeVersionCheck,1800)}}
+async function checkForProgramUpdate(silent=false){
+  const notify=(text,success=false)=>{if(!silent)showVersionCheck(text,success)};
+  notify("Проверяем актуальность программы...");
+  const urlParams=new URLSearchParams(window.location.search),forcedVersion=urlParams.get("version"),attemptKey="mama_update_once";
+  try{
+    const controller=new AbortController();
+    const timeoutId=setTimeout(()=>controller.abort(),5000);
+    const response=await fetch("version.json?check="+Date.now(),{cache:"no-store",signal:controller.signal,headers:{"Cache-Control":"no-cache","Pragma":"no-cache"}});
+    clearTimeout(timeoutId);
+    if(!response.ok){notify("Не удалось проверить версию. Запускаем программу.",true);if(!silent)setTimeout(closeVersionCheck,1200);return;}
+    const remote=await response.json(),remoteVersion=remote&&remote.version;
+    if(!remoteVersion){notify("Версия не определена. Запускаем программу.",true);if(!silent)setTimeout(closeVersionCheck,1200);return;}
+    if(APP_VERSION===remoteVersion){
+      sessionStorage.removeItem(attemptKey);history.replaceState(null,"",window.location.pathname);
+      notify(forcedVersion===remoteVersion?"✅ Обновление завершено. Версия: "+APP_VERSION:"✅ Версия программы актуальна: "+APP_VERSION,true);
+      setTimeout(closeVersionCheck,900);return;
+    }
+    if(sessionStorage.getItem(attemptKey)==="1"){
+      sessionStorage.removeItem(attemptKey);history.replaceState(null,"",window.location.pathname);
+      notify("Обновление уже загружено. Запускаем программу.",true);if(!silent)setTimeout(closeVersionCheck,900);return;
+    }
+    sessionStorage.setItem(attemptKey,"1");
+    notify("Найдено обновление "+remoteVersion+". Обновляем программу...");
+    setTimeout(()=>{window.location.replace(window.location.origin+window.location.pathname+"?version="+encodeURIComponent(remoteVersion)+"&refresh="+Date.now())},900);
+  }catch(error){console.warn("Не удалось проверить обновление программы:",error);showVersionCheck("Не удалось проверить версию. Запускаем программу.",true);setTimeout(closeVersionCheck,1200)}
+}
+
+const SUPABASE_URL = 'https://lhfzvwlbnfvictowzvmp.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_xnF9H_s77aMohEhxmBA_PQ_t8ggXhl0';
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+const REMEMBER_KEY = 'mama_organizer_remember';
+const LOGIN_KEY = 'mama_organizer_login';
+
+let session = null, tasks = [], realtimeChannel = null;
+
+function startRealtime(){
+  if(realtimeChannel) return;
+  realtimeChannel = sb.channel('tasks-realtime')
+    .on('postgres_changes',{event:'*',schema:'public',table:'tasks'},async()=>{ await loadTasks(); })
+    .subscribe((status)=>{
+      if(status==='SUBSCRIBED') setStatus('Онлайн · реалтайм включён');
+    });
+}
+function stopRealtime(){
+  if(!realtimeChannel) return;
+  sb.removeChannel(realtimeChannel);
+  realtimeChannel=null;
+}
+
+const $ = id => document.getElementById(id);
+function esc(v=''){return String(v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]))}
+function show(id,on){$(id).classList.toggle('hidden',!on)}
+function setStatus(s){$('status').textContent=s||''}
+
+async function loadTasks(){
+  if(!session)return;
+  setStatus('Загрузка…');
+  const {data,error}=await sb.from('tasks').select('*').order('created_at',{ascending:false});
+  if(error){setStatus('Не удалось загрузить задачи: '+error.message);return}
+  tasks=data||[];tasks.sort((a,b)=>{const p={TERMINATE:0,'срочно':1,'Посредственно':2};return (p[a.urgency]??2)-(p[b.urgency]??2)||new Date(b.created_at)-new Date(a.created_at)});render();
+}
+function formatDeadline(value){const d=new Date(value);if(Number.isNaN(d.getTime()))return '—';return d.toLocaleDateString('ru-RU',{day:'2-digit',month:'2-digit',year:'numeric'})+' '+d.toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'});}
+function timeToBoom(value){const ms=new Date(value).getTime()-Date.now();if(ms<=0)return '00 ч 00 мин 00 сек';const total=Math.floor(ms/1000),h=Math.floor(total/3600),m=Math.floor((total%3600)/60),s=total%60;return String(h).padStart(2,'0')+' ч '+String(m).padStart(2,'0')+' мин '+String(s).padStart(2,'0')+' сек';}
+function updateDeadlineTimers(){document.querySelectorAll('[data-timer-id]').forEach(el=>{const t=tasks.find(x=>x.id===el.dataset.timerId);if(t?.deadline)el.textContent=timeToBoom(t.deadline);});}
+setInterval(updateDeadlineTimers,1000);
+function render(){
+  let a=[...tasks];
+  const students=[...new Set(tasks.map(t=>(t.student_name||'').trim()).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'ru',{sensitivity:'base'}));
+  const classes=[...new Set(tasks.map(t=>(t.class_name||'').trim()).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'ru',{numeric:true,sensitivity:'base'}));
+  const sf=$('studentFilter'),cf=$('classFilter');
+  const oldStudent=sf.value,oldClass=cf.value;
+  sf.innerHTML='<option value="">Все ученики</option>'+students.map(v=>'<option value="'+esc(v)+'">'+esc(v)+'</option>').join('');
+  cf.innerHTML='<option value="">Все классы</option>'+classes.map(v=>'<option value="'+esc(v)+'">'+esc(v)+'</option>').join('');
+  if(students.includes(oldStudent))sf.value=oldStudent;
+  if(classes.includes(oldClass))cf.value=oldClass;
+  if(sf.value)a=a.filter(t=>(t.student_name||'').trim()===sf.value);
+  if(cf.value)a=a.filter(t=>(t.class_name||'').trim()===cf.value);
+  $('list').innerHTML=a.length?a.map(t=>`
+    <article class="task ${t.completed?'done':''} ${t.urgency==='TERMINATE'?'terminate':t.urgency==='срочно'?'urgent':''}" onclick="openTaskFromCard(event,\'${t.id}\')">
+      <div class="task-head">
+        <input class="check" type="checkbox" ${t.completed?'checked':''} onchange="toggleTask('${t.id}',this.checked)" aria-label="Выполнено">
+        <div class="task-main">
+          <div class="task-name">${esc(t.student_name)}</div>
+          <div class="meta">${esc(t.task)}${t.class_name?' · '+esc(t.class_name):''}</div>
+          ${t.notes?'<div class="notes">'+esc(t.notes)+'</div>':''}
+          ${t.deadline?'<div class="card-deadlines"><div class="card-deadline-row"><span class="card-deadline-label">DEADLINE</span><span class="card-deadline-value">'+formatDeadline(t.deadline)+'</span></div><div class="card-deadline-row"><span class="card-deadline-label">TimeToBOOM</span><span class="card-deadline-value" data-timer-id="'+t.id+'">'+timeToBoom(t.deadline)+'</span></div></div>':''}
+          <div class="task-actions"><button class="btn secondary" onclick="editTask('${t.id}')">Изменить</button><button class="btn danger" onclick="deleteTask('${t.id}')">Удалить</button></div>
+        </div>
+      </div>
+    </article>`).join(''):'<div class="empty">Задач пока нет.<br>Нажмите «＋ Добавить задачу».</div>';
+  setStatus('Всего задач: '+tasks.length+(tasks.filter(t=>t.completed).length?' · выполнено: '+tasks.filter(t=>t.completed).length:''));
+}
+function fillDeadlineOptions(){
+  const d=$('deadlineDay'),m=$('deadlineMonth'),y=$('deadlineYear'),tm=$('deadlineTime');
+  d.innerHTML=Array.from({length:31},(_,i)=>'<option value="'+String(i+1).padStart(2,'0')+'">'+(i+1)+'</option>').join('');
+  m.innerHTML=['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'].map((name,i)=>'<option value="'+String(i+1).padStart(2,'0')+'">'+name+'</option>').join('');
+  const now=new Date(),base=now.getFullYear();
+  y.innerHTML=Array.from({length:11},(_,i)=>'<option value="'+(base-2+i)+'">'+(base-2+i)+'</option>').join('');
+  tm.innerHTML=Array.from({length:1440},(_,i)=>{const h=String(Math.floor(i/60)).padStart(2,'0'),min=String(i%60).padStart(2,'0');return '<option value="'+h+':'+min+'">'+h+':'+min+'</option>'}).join('');
+}
+function setDeadlineValue(value){
+  const date=value?new Date(value):new Date();
+  if(value&&Number.isNaN(date.getTime()))return;
+  $('deadlineDay').value=String(date.getDate()).padStart(2,'0');
+  $('deadlineMonth').value=String(date.getMonth()+1).padStart(2,'0');
+  if(!Array.from($('deadlineYear').options).some(o=>o.value===String(date.getFullYear())))$('deadlineYear').insertAdjacentHTML('beforeend','<option value="'+date.getFullYear()+'">'+date.getFullYear()+'</option>');
+  $('deadlineYear').value=String(date.getFullYear());
+  $('deadlineTime').value=String(date.getHours()).padStart(2,'0')+':'+String(date.getMinutes()).padStart(2,'0');
+}
+function getDeadlineValue(){
+  const y=$('deadlineYear').value,m=$('deadlineMonth').value,d=$('deadlineDay').value,t=$('deadlineTime').value;
+  if(!y||!m||!d||!t)return null;
+  const date=new Date(Number(y),Number(m)-1,Number(d),Number(t.slice(0,2)),Number(t.slice(3,5)));
+  if(date.getFullYear()!==Number(y)||date.getMonth()!==Number(m)-1||date.getDate()!==Number(d))return null;
+  return date.toISOString();
+}
+const VAPID_PUBLIC_KEY='BF1gbfINyUjD4fYP8KkOEjCahULPCPLCbNiT8p4XZU7veLJfEFBnse_B4MzHnC6T0fDLJq2NLy0FgvjIwuRHWuE';
+function urlBase64ToUint8Array(base64String){const padding='='.repeat((4-base64String.length%4)%4);const base64=(base64String+padding).replace(/-/g,'+').replace(/_/g,'/');const raw=atob(base64);return Uint8Array.from([...raw].map(c=>c.charCodeAt(0)));}
+function setNotificationOptions(enabled,offsets){const a=(offsets||[]).map(Number);$('notifyEnabled').checked=!!enabled;const standard=a.find(x=>[1440,720,360,180,120,60,30,15,10,5,1].includes(x));$('notifyInterval').value=String(standard||60);const custom=a.find(x=>![1440,720,360,180,120,60,30,15,10,5,1].includes(x));$('notifyCustomEnabled').checked=!!custom;$('notifyCustom').value=custom||'';}
+function getNotificationOffsets(){const a=[];if($('notifyEnabled').checked)a.push(Number($('notifyInterval').value));if($('notifyCustomEnabled').checked){const custom=Number($('notifyCustom').value);if(custom>0)a.push(Math.floor(custom));}return [...new Set(a)];}
+async function ensurePushPermission(){if(!$('notifyEnabled').checked)return true;if(!('Notification'in window)||!('serviceWorker'in navigator)||!('PushManager'in window)){ $('pushStatus').textContent='Этот браузер не поддерживает push-уведомления.';return false;}try{const permission=await Notification.requestPermission();if(permission!=='granted'){ $('pushStatus').textContent='Разрешение на уведомления не выдано.';return false;}const reg=await navigator.serviceWorker.register('./sw.js');let sub=await reg.pushManager.getSubscription();if(!sub)sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:urlBase64ToUint8Array(VAPID_PUBLIC_KEY)});const j=sub.toJSON();const {error}=await sb.from('push_subscriptions').upsert({user_id:session.user.id,endpoint:j.endpoint,p256dh:j.keys.p256dh,auth:j.keys.auth,updated_at:new Date().toISOString()},{onConflict:'endpoint'});if(error)throw error;$('pushStatus').textContent='Уведомления разрешены на этом телефоне.';return true;}catch(e){$('pushStatus').textContent='Не удалось включить уведомления: '+e.message;return false;}}
+function openModal(t=null){
+  fillDeadlineOptions();
+  $('taskId').value=t?.id||'';$('task').value=t?.task||'';$('student').value=t?.student_name||'';$('className').value=t?.class_name||'';$('notes').value=t?.notes||'';$('urgency').value=t?.urgency||'Посредственно';
+  setDeadlineValue(t?.deadline||null);setNotificationOptions(t?.notification_enabled,t?.notification_offsets||[]);
+  $('modalTitle').textContent=t?'Изменить задачу':'Новая задача';$('formError').textContent='';show('modal',true);setTimeout(()=>$('task').focus(),50);
+}
+function closeModal(){show('modal',false)}
+async function saveTask(e){
+  e.preventDefault();$('formError').textContent='';
+  const offsets=getNotificationOffsets();const notifyEnabled=$('notifyEnabled').checked&&offsets.length>0;
+  const payload={task:$('task').value.trim(),student_name:$('student').value.trim(),class_name:$('className').value.trim(),notes:$('notes').value.trim(),urgency:$('urgency').value,deadline:getDeadlineValue(),notification_enabled:notifyEnabled,notification_offsets:offsets,updated_at:new Date().toISOString()};
+  if(!payload.task){$('formError').textContent='Введите задачу.';return}
+  const id=$('taskId').value;
+  const q=id?sb.from('tasks').update(payload).eq('id',id):sb.from('tasks').insert(payload);
+  const {error}=await q;
+  if(error){$('formError').textContent=error.message;return}
+  closeModal();await loadTasks();
+}
+window.toggleTask=async(id,completed)=>{
+  const {error}=await sb.from('tasks').update({completed,updated_at:new Date().toISOString()}).eq('id',id);
+  if(error){setStatus('Ошибка: '+error.message);return} const t=tasks.find(x=>x.id===id);if(t)t.completed=completed;render();
+};
+window.openTaskFromCard=(e,id)=>{if(e.target.closest('button,input,textarea,label'))return;const t=tasks.find(x=>x.id===id);if(t)openModal(t)};
+window.editTask=id=>{const t=tasks.find(x=>x.id===id);if(t)openModal(t)};
+window.deleteTask=async id=>{
+  const t=tasks.find(x=>x.id===id);if(!t)return;
+  if(!confirm('Удалить эту задачу?'))return;
+  const {error}=await sb.from('tasks').delete().eq('id',id);
+  if(error){setStatus('Ошибка: '+error.message);return} await loadTasks();
+};
+
+$('email').value=localStorage.getItem(LOGIN_KEY)||'';
+$('togglePassword').addEventListener('click',e=>{ e.preventDefault();
+  const input=$('password'), btn=$('togglePassword');
+  const visible=input.type==='text';
+  input.type=visible?'password':'text';
+  btn.textContent=visible?'👁':'🙈';
+  btn.setAttribute('aria-label',visible?'Показать пароль':'Скрыть пароль');
+  btn.title=visible?'Показать пароль':'Скрыть пароль';
+});
+$('rememberMe').checked=localStorage.getItem(REMEMBER_KEY)==='1';
+
+$('loginForm').addEventListener('submit',async e=>{
+  e.preventDefault();$('authError').textContent='Вход…';
+  const login=$('email').value.trim();
+  const remember=$('rememberMe').checked;
+  if(remember){
+    localStorage.setItem(REMEMBER_KEY,'1');
+    localStorage.setItem(LOGIN_KEY,login);
+  }else{
+    localStorage.removeItem(REMEMBER_KEY);
+    localStorage.removeItem(LOGIN_KEY);
+  }
+  const {data,error}=await sb.auth.signInWithPassword({email:login,password:$('password').value});
+  if(error){
+    localStorage.removeItem(REMEMBER_KEY);
+    localStorage.removeItem(LOGIN_KEY);
+    $('authError').textContent=error.message;
+    return;
+  }
+  session=data.session;startRealtime();show('auth',false);show('app',true);$('userLine').textContent=session.user.email||'';await loadTasks();
+});
+$('versionBtn').onclick=checkVersionNow;
+$('logoutBtn').onclick=async()=>{
+  await sb.auth.signOut();
+  localStorage.removeItem(REMEMBER_KEY);
+  localStorage.removeItem(LOGIN_KEY);
+  session=null;stopRealtime();show('app',false);show('auth',true);
+};
+$('addBtn').onclick=()=>openModal();$('closeModal').onclick=closeModal;$('cancelBtn').onclick=closeModal;
+$('modal').addEventListener('click',e=>{if(e.target===$('modal'))closeModal()});
+$('taskForm').addEventListener('submit',saveTask);
+$('studentFilter').onchange=render;$('classFilter').onchange=render;
+
+sb.auth.onAuthStateChange((_event,s)=>{
+  session=s;
+  if(s){
+    startRealtime();
+    show('auth',false);show('app',true);
+    $('userLine').textContent=s.user.email||'';
+    loadTasks();
+  }else{
+    show('app',false);show('auth',true);
+  }
+});
+
+(async()=>{
+  checkForProgramUpdate(true).catch(error=>console.warn("Тихая проверка обновления:",error));
+  const {data}=await sb.auth.getSession();
+  session=data.session;
+  if(session){
+    if(localStorage.getItem(REMEMBER_KEY)==='1'){
+      startRealtime();show('auth',false);show('app',true);$('userLine').textContent=session.user.email||'';await loadTasks();
+    }else{
+      await sb.auth.signOut();
+    }
+  }
+})();
+</script>
+</body>
+</html>
