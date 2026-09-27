@@ -224,11 +224,14 @@ function getDeadlineValue(){
 }
 let modalHistoryOpen=false;
 let backPressAt=0;
+let allowAppExit=false;
 window.addEventListener('popstate',()=>{
   if(modalHistoryOpen){modalHistoryOpen=false;show('modal',false);return}
   if(!$('app').classList.contains('hidden')){
+    if(allowAppExit){allowAppExit=false;return}
     const now=Date.now();
     if(now-backPressAt<1800){
+      allowAppExit=true;
       history.back();
       return;
     }
