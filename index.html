@@ -157,14 +157,14 @@ window.deleteTask=async id=>{
 };
 
 $('email').value=localStorage.getItem(LOGIN_KEY)||'';
-$('togglePassword').onclick=()=>{
+$('togglePassword').addEventListener('click',e=>{ e.preventDefault();
   const input=$('password'), btn=$('togglePassword');
   const visible=input.type==='text';
   input.type=visible?'password':'text';
   btn.textContent=visible?'👁':'🙈';
   btn.setAttribute('aria-label',visible?'Показать пароль':'Скрыть пароль');
   btn.title=visible?'Показать пароль':'Скрыть пароль';
-};
+});
 $('rememberMe').checked=localStorage.getItem(REMEMBER_KEY)==='1';
 
 $('loginForm').addEventListener('submit',async e=>{
@@ -198,14 +198,12 @@ $('modal').addEventListener('click',e=>{if(e.target===$('modal'))closeModal()});
 $('taskForm').addEventListener('submit',saveTask);
 document.querySelectorAll('.sort').forEach(b=>b.onclick=()=>{sortMode=b.dataset.sort;document.querySelectorAll('.sort').forEach(x=>x.classList.toggle('active',x===b));render()});
 
-supabase.auth.onAuthStateChange(async(_event,s)=>{
+supabase.auth.onAuthStateChange((_event,s)=>{
   session=s;
   if(s){
-    if(localStorage.getItem(REMEMBER_KEY)==='1'){
-      show('auth',false);show('app',true);$('userLine').textContent=s.user.email||'';await loadTasks();
-    }else{
-      await supabase.auth.signOut();
-    }
+    show('auth',false);show('app',true);
+    $('userLine').textContent=s.user.email||'';
+    loadTasks();
   }else{
     show('app',false);show('auth',true);
   }
@@ -214,10 +212,12 @@ supabase.auth.onAuthStateChange(async(_event,s)=>{
 (async()=>{
   const {data}=await supabase.auth.getSession();
   session=data.session;
-  if(session && localStorage.getItem(REMEMBER_KEY)==='1'){
-    show('auth',false);show('app',true);$('userLine').textContent=session.user.email||'';await loadTasks();
-  }else if(session){
-    await supabase.auth.signOut();
+  if(session){
+    if(localStorage.getItem(REMEMBER_KEY)==='1'){
+      show('auth',false);show('app',true);$('userLine').textContent=session.user.email||'';await loadTasks();
+    }else{
+      await supabase.auth.signOut();
+    }
   }
 })();
 </script>
