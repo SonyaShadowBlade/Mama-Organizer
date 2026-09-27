@@ -99,7 +99,7 @@ input:focus,textarea:focus{border-color:#667eea;box-shadow:0 0 0 3px #667eea18}t
 </div>
 
 <script>
-const APP_VERSION = "0.1.6";
+const APP_VERSION = "0.1.7";
 function showVersionCheck(text, success=false){const bg=$("versionCheckBg"),textEl=$("versionCheckText"),spinner=$("versionCheckSpinner");if(!bg||!textEl||!spinner)return;bg.style.display="flex";textEl.textContent=text;spinner.style.display=success?"none":"block"}
 function closeVersionCheck(){const bg=$("versionCheckBg");if(bg)bg.style.display="none"}
 async function checkVersionNow(){showVersionCheck("Проверяем актуальность программы...");try{const response=await fetch("version.json?check="+Date.now(),{cache:"no-store",headers:{"Cache-Control":"no-cache","Pragma":"no-cache"}});if(!response.ok){showVersionCheck("Не удалось получить версию с GitHub Pages.",true);setTimeout(closeVersionCheck,1800);return}const remote=await response.json();const remoteVersion=remote&&remote.version;if(!remoteVersion){showVersionCheck("GitHub Pages не вернул номер версии.",true);setTimeout(closeVersionCheck,1800);return}if(remoteVersion===APP_VERSION){showVersionCheck("✅ Версия актуальна: "+APP_VERSION+". Обновляем страницу...");}else{showVersionCheck("GitHub: "+remoteVersion+" | Загружена: "+APP_VERSION+". Обновляем страницу...")}setTimeout(()=>{window.location.replace(window.location.origin+window.location.pathname+"?refresh="+Date.now())},700)}catch(error){console.warn("Не удалось проверить версию:",error);showVersionCheck("Не удалось проверить версию. Проверьте соединение.",true);setTimeout(closeVersionCheck,1800)}}
@@ -165,7 +165,7 @@ async function loadTasks(){
   tasks=data||[];tasks.sort((a,b)=>{const p={TERMINATE:0,'срочно':1,'Посредственно':2};return (p[a.urgency]??2)-(p[b.urgency]??2)||new Date(b.created_at)-new Date(a.created_at)});render();
 }
 function formatDeadline(value){const d=new Date(value);if(Number.isNaN(d.getTime()))return '—';return d.toLocaleDateString('ru-RU',{day:'2-digit',month:'2-digit',year:'numeric'})+' '+d.toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'});}
-function timeToBoom(value){const ms=new Date(value).getTime()-Date.now();if(ms<=0)return '00 ч 00 мин';const total=Math.floor(ms/60000),h=Math.floor(total/60),m=total%60;return String(h).padStart(2,'0')+' ч '+String(m).padStart(2,'0')+' мин';}
+function timeToBoom(value){const ms=new Date(value).getTime()-Date.now();if(ms<=0)return '00 ч 00 мин 00 сек';const total=Math.floor(ms/1000),h=Math.floor(total/3600),m=Math.floor((total%3600)/60),s=total%60;return String(h).padStart(2,'0')+' ч '+String(m).padStart(2,'0')+' мин '+String(s).padStart(2,'0')+' сек';}
 function updateDeadlineTimers(){document.querySelectorAll('[data-timer-id]').forEach(el=>{const t=tasks.find(x=>x.id===el.dataset.timerId);if(t?.deadline)el.textContent=timeToBoom(t.deadline);});}
 setInterval(updateDeadlineTimers,1000);
 function render(){
