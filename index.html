@@ -230,7 +230,7 @@ window.addEventListener('popstate',()=>{
   if(!$('app').classList.contains('hidden')){
     if(allowAppExit){allowAppExit=false;return}
     const now=Date.now();
-    if(now-backPressAt<400){
+    if(now-backPressAt<200){
       allowAppExit=true;
       history.back();
       return;
@@ -238,7 +238,7 @@ window.addEventListener('popstate',()=>{
     backPressAt=now;
     history.pushState({appRoot:true},'',window.location.pathname);
     setStatus('Нажмите «Назад» ещё раз, чтобы выйти из приложения');
-    setTimeout(()=>{if(Date.now()-backPressAt>=400)$('status').textContent=''},500);
+    setTimeout(()=>{if(Date.now()-backPressAt>=200)$('status').textContent=''},300);
   }
 });
 const VAPID_PUBLIC_KEY='BF1gbfINyUjD4fYP8KkOEjCahULPCPLCbNiT8p4XZU7veLJfEFBnse_B4MzHnC6T0fDLJq2NLy0FgvjIwuRHWuE';
