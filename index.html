@@ -96,7 +96,21 @@ const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 const REMEMBER_KEY = 'mama_organizer_remember';
 const LOGIN_KEY = 'mama_organizer_login';
 
-let session = null, tasks = [];
+let session = null, tasks = [], realtimeChannel = null;
+
+function startRealtime(){
+  if(realtimeChannel) return;
+  realtimeChannel = sb.channel('tasks-realtime')
+    .on('postgres_changes',{event:'*',schema:'public',table:'tasks'},async()=>{ await loadTasks(); })
+    .subscribe((status)=>{
+      if(status==='SUBSCRIBED') setStatus('Онлайн · реалтайм включён');
+    });
+}
+function stopRealtime(){
+  if(!realtimeChannel) return;
+  sb.removeChannel(realtimeChannel);
+  realtimeChannel=null;
+}
 
 const $ = id => document.getElementById(id);
 function esc(v=''){return String(v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]))}
@@ -193,23 +207,23 @@ $('loginForm').addEventListener('submit',async e=>{
     $('authError').textContent=error.message;
     return;
   }
-  session=data.session;show('auth',false);show('app',true);$('userLine').textContent=session.user.email||'';await loadTasks();
+  session=data.session;startRealtime();show('auth',false);show('app',true);$('userLine').textContent=session.user.email||'';await loadTasks();
 });
 $('logoutBtn').onclick=async()=>{
   await sb.auth.signOut();
   localStorage.removeItem(REMEMBER_KEY);
   localStorage.removeItem(LOGIN_KEY);
-  session=null;show('app',false);show('auth',true);
+  session=null;stopRealtime();show('app',false);show('auth',true);
 };
 $('addBtn').onclick=()=>openModal();$('closeModal').onclick=closeModal;$('cancelBtn').onclick=closeModal;
 $('modal').addEventListener('click',e=>{if(e.target===$('modal'))closeModal()});
 $('taskForm').addEventListener('submit',saveTask);
 $('studentFilter').onchange=render;$('classFilter').onchange=render;
-sb.channel('tasks-realtime').on('postgres_changes',{event:'*',schema:'public',table:'tasks'},async()=>{await loadTasks()}).subscribe();
 
 sb.auth.onAuthStateChange((_event,s)=>{
   session=s;
   if(s){
+    startRealtime();
     show('auth',false);show('app',true);
     $('userLine').textContent=s.user.email||'';
     loadTasks();
@@ -223,7 +237,7 @@ sb.auth.onAuthStateChange((_event,s)=>{
   session=data.session;
   if(session){
     if(localStorage.getItem(REMEMBER_KEY)==='1'){
-      show('auth',false);show('app',true);$('userLine').textContent=session.user.email||'';await loadTasks();
+      startRealtime();show('auth',false);show('app',true);$('userLine').textContent=session.user.email||'';await loadTasks();
     }else{
       await sb.auth.signOut();
     }
