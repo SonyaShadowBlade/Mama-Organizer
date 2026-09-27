@@ -17,7 +17,8 @@ button,input,textarea{font:inherit}button{cursor:pointer;border:0}
 input,textarea{width:100%;border:1px solid #d5dbe5;border-radius:12px;padding:12px 13px;background:#fff;outline:none}
 input:focus,textarea:focus{border-color:#667eea;box-shadow:0 0 0 3px #667eea18}textarea{min-height:90px;resize:vertical}
 .btn{border-radius:12px;padding:12px 16px;font-weight:700}.primary{background:#111827;color:#fff}.secondary{background:#eef1f5;color:#172033}.danger{background:#fee2e2;color:#991b1b}
-.auth-btn{width:100%;margin-top:8px}.error{color:#b42318;font-size:14px;min-height:20px;margin-top:10px}
+.auth-btn{width:100%;margin-top:8px}.remember{display:flex;align-items:center;gap:9px;margin:12px 0 2px;font-size:14px;color:#4b5563;cursor:pointer;user-select:none}.remember input{width:18px;height:18px;margin:0;accent-color:#111827}
+.error{color:#b42318;font-size:14px;min-height:20px;margin-top:10px}
 .top{padding:16px;margin-bottom:14px;position:sticky;top:10px;z-index:5}
 .topline{display:flex;justify-content:space-between;align-items:center;gap:12px}.title{font-size:24px;font-weight:800}
 .userline{font-size:13px;color:#687386;margin-top:3px;overflow:hidden;text-overflow:ellipsis}
@@ -46,8 +47,9 @@ input:focus,textarea:focus{border-color:#667eea;box-shadow:0 0 0 3px #667eea18}t
       <div class="logo">📋 Органайзер</div>
       <div class="muted">Личные задачи и ученики</div>
       <form id="loginForm">
-        <div class="field"><label for="email">Электронная почта</label><input id="email" type="email" autocomplete="username" required></div>
+        <div class="field"><label for="email">Логин</label><input id="email" type="text" autocomplete="username" required></div>
         <div class="field"><label for="password">Пароль</label><input id="password" type="password" autocomplete="current-password" required></div>
+        <label class="remember"><input id="rememberMe" type="checkbox"> <span>Запомнить меня</span></label>
         <button class="btn primary auth-btn" type="submit">Войти</button>
       </form>
       <div id="authError" class="error"></div>
@@ -90,6 +92,9 @@ input:focus,textarea:focus{border-color:#667eea;box-shadow:0 0 0 3px #667eea18}t
 const SUPABASE_URL = 'https://lhfzvwlbnfvictowzvmp.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_xnF9H_s77aMohEhxmBA_PQ_t8ggXhl0';
 const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+const REMEMBER_KEY = 'mama_organizer_remember';
+const LOGIN_KEY = 'mama_organizer_login';
 
 let session = null, tasks = [], sortMode = 'created';
 
@@ -150,19 +155,57 @@ window.deleteTask=async id=>{
   if(error){setStatus('Ошибка: '+error.message);return} await loadTasks();
 };
 
+$('email').value=localStorage.getItem(LOGIN_KEY)||'';
+$('rememberMe').checked=localStorage.getItem(REMEMBER_KEY)==='1';
+
 $('loginForm').addEventListener('submit',async e=>{
   e.preventDefault();$('authError').textContent='Вход…';
-  const {data,error}=await supabase.auth.signInWithPassword({email:$('email').value.trim(),password:$('password').value});
+  const login=$('email').value.trim();
+  const remember=$('rememberMe').checked;
+  const {data,error}=await supabase.auth.signInWithPassword({email:login,password:$('password').value});
   if(error){$('authError').textContent=error.message;return}
+  if(remember){
+    localStorage.setItem(REMEMBER_KEY,'1');
+    localStorage.setItem(LOGIN_KEY,login);
+  }else{
+    localStorage.removeItem(REMEMBER_KEY);
+    localStorage.removeItem(LOGIN_KEY);
+  }
   session=data.session;show('auth',false);show('app',true);$('userLine').textContent=session.user.email||'';await loadTasks();
 });
-$('logoutBtn').onclick=async()=>{await supabase.auth.signOut();session=null;show('app',false);show('auth',true)};
+$('logoutBtn').onclick=async()=>{
+  await supabase.auth.signOut();
+  localStorage.removeItem(REMEMBER_KEY);
+  localStorage.removeItem(LOGIN_KEY);
+  session=null;show('app',false);show('auth',true);
+};
 $('addBtn').onclick=()=>openModal();$('closeModal').onclick=closeModal;$('cancelBtn').onclick=closeModal;
 $('modal').addEventListener('click',e=>{if(e.target===$('modal'))closeModal()});
 $('taskForm').addEventListener('submit',saveTask);
 document.querySelectorAll('.sort').forEach(b=>b.onclick=()=>{sortMode=b.dataset.sort;document.querySelectorAll('.sort').forEach(x=>x.classList.toggle('active',x===b));render()});
-supabase.auth.onAuthStateChange(async(_event,s)=>{session=s;if(s){show('auth',false);show('app',true);$('userLine').textContent=s.user.email||'';await loadTasks()}else{show('app',false);show('auth',true)}});
-(async()=>{const {data}=await supabase.auth.getSession();session=data.session;if(session){show('auth',false);show('app',true);$('userLine').textContent=session.user.email||'';await loadTasks()}})();
+
+supabase.auth.onAuthStateChange(async(_event,s)=>{
+  session=s;
+  if(s){
+    if(localStorage.getItem(REMEMBER_KEY)==='1'){
+      show('auth',false);show('app',true);$('userLine').textContent=s.user.email||'';await loadTasks();
+    }else{
+      await supabase.auth.signOut();
+    }
+  }else{
+    show('app',false);show('auth',true);
+  }
+});
+
+(async()=>{
+  const {data}=await supabase.auth.getSession();
+  session=data.session;
+  if(session && localStorage.getItem(REMEMBER_KEY)==='1'){
+    show('auth',false);show('app',true);$('userLine').textContent=session.user.email||'';await loadTasks();
+  }else if(session){
+    await supabase.auth.signOut();
+  }
+})();
 </script>
 </body>
 </html>
