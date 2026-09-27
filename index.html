@@ -27,7 +27,7 @@ input:focus,textarea:focus{border-color:#667eea;box-shadow:0 0 0 3px #667eea18}t
 .sorts{display:flex;gap:8px;margin-top:10px;overflow:auto;padding-bottom:2px}.sort{white-space:nowrap}
 .sort.active{background:#dfe5ff;color:#273b9b}
 .status{font-size:14px;color:#687386;margin:12px 2px}
-.list{display:grid;gap:10px}.task{padding:15px}.task.done{opacity:.65}.task-head{display:flex;gap:12px;align-items:flex-start}
+.list{display:grid;gap:10px}.task{padding:15px;border-left:6px solid #22c55e;cursor:pointer;transition:.15s}.task.done{border-left-color:#ef4444}.task.done{opacity:.65}.task-head{display:flex;gap:12px;align-items:flex-start}
 .check{width:23px;height:23px;flex:0 0 23px;margin-top:2px;accent-color:#111827}
 .task-main{min-width:0;flex:1}.task-name{font-size:18px;font-weight:750;overflow-wrap:anywhere}.meta{font-size:14px;color:#687386;margin-top:3px}
 .notes{white-space:pre-wrap;margin-top:10px;color:#394357;overflow-wrap:anywhere}.task-actions{display:flex;gap:7px;margin-top:12px}.task-actions .btn{padding:9px 11px;font-size:14px}
@@ -116,7 +116,7 @@ function render(){
   if(sortMode==='student')a.sort((x,y)=>(x.student_name||'').localeCompare(y.student_name||'','ru',{sensitivity:'base'})||new Date(y.created_at)-new Date(x.created_at));
   if(sortMode==='class')a.sort((x,y)=>(x.class_name||'').localeCompare(y.class_name||'','ru',{numeric:true,sensitivity:'base'})||new Date(y.created_at)-new Date(x.created_at));
   $('list').innerHTML=a.length?a.map(t=>`
-    <article class="task ${t.completed?'done':''}">
+    <article class="task ${t.completed?'done':''}" onclick="openTaskFromCard(event,\'${t.id}\')">
       <div class="task-head">
         <input class="check" type="checkbox" ${t.completed?'checked':''} onchange="toggleTask('${t.id}',this.checked)" aria-label="Выполнено">
         <div class="task-main">
@@ -148,6 +148,7 @@ window.toggleTask=async(id,completed)=>{
   const {error}=await sb.from('tasks').update({completed,updated_at:new Date().toISOString()}).eq('id',id);
   if(error){setStatus('Ошибка: '+error.message);return} const t=tasks.find(x=>x.id===id);if(t)t.completed=completed;render();
 };
+window.openTaskFromCard=(e,id)=>{if(e.target.closest('button,input,textarea,label'))return;const t=tasks.find(x=>x.id===id);if(t)openModal(t)};
 window.editTask=id=>{const t=tasks.find(x=>x.id===id);if(t)openModal(t)};
 window.deleteTask=async id=>{
   const t=tasks.find(x=>x.id===id);if(!t)return;
@@ -197,6 +198,7 @@ $('addBtn').onclick=()=>openModal();$('closeModal').onclick=closeModal;$('cancel
 $('modal').addEventListener('click',e=>{if(e.target===$('modal'))closeModal()});
 $('taskForm').addEventListener('submit',saveTask);
 document.querySelectorAll('.sort').forEach(b=>b.onclick=()=>{sortMode=b.dataset.sort;document.querySelectorAll('.sort').forEach(x=>x.classList.toggle('active',x===b));render()});
+sb.channel('tasks-realtime').on('postgres_changes',{event:'*',schema:'public',table:'tasks'},async()=>{await loadTasks()}).subscribe();
 
 sb.auth.onAuthStateChange((_event,s)=>{
   session=s;
