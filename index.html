@@ -25,7 +25,7 @@ input:focus,textarea:focus{border-color:#667eea;box-shadow:0 0 0 3px #667eea18}t
 .userline{font-size:13px;color:#687386;margin-top:3px;overflow:hidden;text-overflow:ellipsis}
 .actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}.actions .btn{flex:1;min-width:140px}
 .sorts{display:flex;gap:8px;margin-top:10px;overflow:auto;padding-bottom:2px}.sort{white-space:nowrap}
-.sort.active{background:#dfe5ff;color:#273b9b}
+.sort.active{background:#dfe5ff;color:#273b9b}.filter-select{flex:1;min-width:0;appearance:auto}
 .status{font-size:14px;color:#687386;margin:12px 2px}
 .list{display:grid;gap:10px}.task{padding:15px;border-left:6px solid #22c55e;cursor:pointer;transition:.15s}.task.done{border-left-color:#ef4444}.task.done{opacity:.65}.task-head{display:flex;gap:12px;align-items:flex-start}
 .check{width:23px;height:23px;flex:0 0 23px;margin-top:2px;accent-color:#111827}
@@ -64,9 +64,8 @@ input:focus,textarea:focus{border-color:#667eea;box-shadow:0 0 0 3px #667eea18}t
       <div class="topline"><div><div class="title">Задачи</div><div id="userLine" class="userline"></div></div><button id="logoutBtn" class="btn secondary">Выйти</button></div>
       <div class="actions"><button id="addBtn" class="btn primary">＋ Добавить задачу</button></div>
       <div class="sorts">
-        <button class="btn secondary sort active" data-sort="created">По добавлению</button>
-        <button class="btn secondary sort" data-sort="student">По имени ученика</button>
-        <button class="btn secondary sort" data-sort="class">По классу</button>
+        <select id="studentFilter" class="btn secondary filter-select"><option value="">Все ученики</option></select>
+        <select id="classFilter" class="btn secondary filter-select"><option value="">Все классы</option></select>
       </div>
     </header>
     <div id="status" class="status"></div>
@@ -97,7 +96,7 @@ const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 const REMEMBER_KEY = 'mama_organizer_remember';
 const LOGIN_KEY = 'mama_organizer_login';
 
-let session = null, tasks = [], sortMode = 'created';
+let session = null, tasks = [];
 
 const $ = id => document.getElementById(id);
 function esc(v=''){return String(v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]))}
@@ -113,8 +112,16 @@ async function loadTasks(){
 }
 function render(){
   let a=[...tasks];
-  if(sortMode==='student')a.sort((x,y)=>(x.student_name||'').localeCompare(y.student_name||'','ru',{sensitivity:'base'})||new Date(y.created_at)-new Date(x.created_at));
-  if(sortMode==='class')a.sort((x,y)=>(x.class_name||'').localeCompare(y.class_name||'','ru',{numeric:true,sensitivity:'base'})||new Date(y.created_at)-new Date(x.created_at));
+  const students=[...new Set(tasks.map(t=>(t.student_name||'').trim()).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'ru',{sensitivity:'base'}));
+  const classes=[...new Set(tasks.map(t=>(t.class_name||'').trim()).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'ru',{numeric:true,sensitivity:'base'}));
+  const sf=$('studentFilter'),cf=$('classFilter');
+  const oldStudent=sf.value,oldClass=cf.value;
+  sf.innerHTML='<option value="">Все ученики</option>'+students.map(v=>'<option value="'+esc(v)+'">'+esc(v)+'</option>').join('');
+  cf.innerHTML='<option value="">Все классы</option>'+classes.map(v=>'<option value="'+esc(v)+'">'+esc(v)+'</option>').join('');
+  if(students.includes(oldStudent))sf.value=oldStudent;
+  if(classes.includes(oldClass))cf.value=oldClass;
+  if(sf.value)a=a.filter(t=>(t.student_name||'').trim()===sf.value);
+  if(cf.value)a=a.filter(t=>(t.class_name||'').trim()===cf.value);
   $('list').innerHTML=a.length?a.map(t=>`
     <article class="task ${t.completed?'done':''}" onclick="openTaskFromCard(event,\'${t.id}\')">
       <div class="task-head">
@@ -197,7 +204,7 @@ $('logoutBtn').onclick=async()=>{
 $('addBtn').onclick=()=>openModal();$('closeModal').onclick=closeModal;$('cancelBtn').onclick=closeModal;
 $('modal').addEventListener('click',e=>{if(e.target===$('modal'))closeModal()});
 $('taskForm').addEventListener('submit',saveTask);
-document.querySelectorAll('.sort').forEach(b=>b.onclick=()=>{sortMode=b.dataset.sort;document.querySelectorAll('.sort').forEach(x=>x.classList.toggle('active',x===b));render()});
+$('studentFilter').onchange=render;$('classFilter').onchange=render;
 sb.channel('tasks-realtime').on('postgres_changes',{event:'*',schema:'public',table:'tasks'},async()=>{await loadTasks()}).subscribe();
 
 sb.auth.onAuthStateChange((_event,s)=>{
