@@ -221,18 +221,22 @@ function getDeadlineValue(){
   if(date.getFullYear()!==Number(y)||date.getMonth()!==Number(m)-1||date.getDate()!==Number(d))return null;
   return date.toISOString();
 }
+window.addEventListener('popstate',()=>{
+  if(modalHistoryOpen){modalHistoryOpen=false;show('modal',false)}
+});
 const VAPID_PUBLIC_KEY='BF1gbfINyUjD4fYP8KkOEjCahULPCPLCbNiT8p4XZU7veLJfEFBnse_B4MzHnC6T0fDLJq2NLy0FgvjIwuRHWuE';
 function urlBase64ToUint8Array(base64String){const padding='='.repeat((4-base64String.length%4)%4);const base64=(base64String+padding).replace(/-/g,'+').replace(/_/g,'/');const raw=atob(base64);return Uint8Array.from([...raw].map(c=>c.charCodeAt(0)));}
 function setNotificationOptions(enabled,offsets){const a=(offsets||[]).map(Number);$('notifyEnabled').checked=!!enabled;const standard=a.find(x=>[1440,720,360,180,120,60,30,15,10,5,1].includes(x));$('notifyInterval').value=String(standard||60);const custom=a.find(x=>![1440,720,360,180,120,60,30,15,10,5,1].includes(x));$('notifyCustomEnabled').checked=!!custom;$('notifyCustom').value=custom||'';}
 function getNotificationOffsets(){const a=[];if($('notifyEnabled').checked)a.push(Number($('notifyInterval').value));if($('notifyCustomEnabled').checked){const custom=Number($('notifyCustom').value);if(custom>0)a.push(Math.floor(custom));}return [...new Set(a)];}
 async function ensurePushPermission(){if(!$('notifyEnabled').checked)return true;if(!('Notification'in window)||!('serviceWorker'in navigator)||!('PushManager'in window)){ $('pushStatus').textContent='Этот браузер не поддерживает push-уведомления.';return false;}try{const permission=await Notification.requestPermission();if(permission!=='granted'){ $('pushStatus').textContent='Разрешение на уведомления не выдано.';return false;}const reg=await navigator.serviceWorker.register('./sw.js');let sub=await reg.pushManager.getSubscription();if(!sub)sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:urlBase64ToUint8Array(VAPID_PUBLIC_KEY)});const j=sub.toJSON();const {error}=await sb.from('push_subscriptions').upsert({user_id:session.user.id,endpoint:j.endpoint,p256dh:j.keys.p256dh,auth:j.keys.auth,updated_at:new Date().toISOString()},{onConflict:'endpoint'});if(error)throw error;$('pushStatus').textContent='Уведомления разрешены на этом телефоне.';return true;}catch(e){$('pushStatus').textContent='Не удалось включить уведомления: '+e.message;return false;}}
 function openModal(t=null){
+  if(!modalHistoryOpen){history.pushState({modal:true},'',window.location.pathname+'#edit');modalHistoryOpen=true}
   fillDeadlineOptions();
   $('taskId').value=t?.id||'';$('task').value=t?.task||'';$('student').value=t?.student_name||'';$('className').value=t?.class_name||'';$('notes').value=t?.notes||'';$('urgency').value=t?.urgency||'Посредственно';
   setDeadlineValue(t?.deadline||null);setNotificationOptions(t?.notification_enabled,t?.notification_offsets||[]);
   $('modalTitle').textContent=t?'Изменить задачу':'Новая задача';$('formError').textContent='';show('modal',true);setTimeout(()=>$('task').focus(),50);
 }
-function closeModal(){show('modal',false)}
+function closeModal(){show('modal',false);history.replaceState(null,'',window.location.pathname)}
 async function saveTask(e){
   e.preventDefault();$('formError').textContent='';
   const offsets=getNotificationOffsets();const notifyEnabled=$('notifyEnabled').checked&&offsets.length>0;
