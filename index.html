@@ -195,7 +195,7 @@ function fillDeadlineOptions(){
   m.innerHTML=['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'].map((name,i)=>'<option value="'+String(i+1).padStart(2,'0')+'">'+name+'</option>').join('');
   const now=new Date(),base=now.getFullYear();
   y.innerHTML=Array.from({length:11},(_,i)=>'<option value="'+(base-2+i)+'">'+(base-2+i)+'</option>').join('');
-  tm.innerHTML=Array.from({length:288},(_,i)=>{const h=String(Math.floor(i/12)).padStart(2,'0'),min=String((i%12)*5).padStart(2,'0');return '<option value="'+h+':'+min+'">'+h+':'+min+'</option>'}).join('');
+  tm.innerHTML=Array.from({length:1440},(_,i)=>{const h=String(Math.floor(i/60)).padStart(2,'0'),min=String(i%60).padStart(2,'0');return '<option value="'+h+':'+min+'">'+h+':'+min+'</option>'}).join('');
 }
 function setDeadlineValue(value){
   const date=value?new Date(value):new Date();
@@ -204,7 +204,7 @@ function setDeadlineValue(value){
   $('deadlineMonth').value=String(date.getMonth()+1).padStart(2,'0');
   if(!Array.from($('deadlineYear').options).some(o=>o.value===String(date.getFullYear())))$('deadlineYear').insertAdjacentHTML('beforeend','<option value="'+date.getFullYear()+'">'+date.getFullYear()+'</option>');
   $('deadlineYear').value=String(date.getFullYear());
-  $('deadlineTime').value=String(date.getHours()).padStart(2,'0')+':'+String(Math.floor(date.getMinutes()/5)*5).padStart(2,'0');
+  $('deadlineTime').value=String(date.getHours()).padStart(2,'0')+':'+String(date.getMinutes()).padStart(2,'0');
 }
 function getDeadlineValue(){
   const y=$('deadlineYear').value,m=$('deadlineMonth').value,d=$('deadlineDay').value,t=$('deadlineTime').value;
