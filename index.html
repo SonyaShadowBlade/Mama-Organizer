@@ -17,7 +17,8 @@ button,input,textarea{font:inherit}button{cursor:pointer;border:0}
 input,textarea{width:100%;border:1px solid #d5dbe5;border-radius:12px;padding:12px 13px;background:#fff;outline:none}
 input:focus,textarea:focus{border-color:#667eea;box-shadow:0 0 0 3px #667eea18}textarea{min-height:90px;resize:vertical}
 .password-wrap{position:relative}.password-wrap input{padding-right:48px}.password-eye{position:absolute;right:6px;top:50%;transform:translateY(-50%);width:38px;height:38px;border-radius:9px;background:transparent;color:#687386;font-size:18px;padding:0}.password-eye:hover{background:#eef1f5}
-.btn{border-radius:12px;padding:12px 16px;font-weight:700}.primary{background:#111827;color:#fff}.secondary{background:#eef1f5;color:#172033}.danger{background:#fee2e2;color:#991b1b}
+.btn{border-radius:12px;padding:12px 16px;font-weight:700}
+.version-check-bg{position:fixed;inset:0;background:#11182780;display:none;align-items:center;justify-content:center;z-index:50;padding:20px}.version-check-modal{width:min(430px,100%);background:#fff;border-radius:20px;padding:24px;text-align:center;box-shadow:0 16px 50px #11182733}.version-check-title{font-size:20px;font-weight:800;margin-bottom:12px}.version-check-text{color:#4b5563;line-height:1.45}.version-check-spinner{width:34px;height:34px;border:4px solid #dbe2ea;border-top-color:#111827;border-radius:50%;margin:0 auto 16px;animation:versionSpin .8s linear infinite}@keyframes versionSpin{to{transform:rotate(360deg)}}.primary{background:#111827;color:#fff}.secondary{background:#eef1f5;color:#172033}.danger{background:#fee2e2;color:#991b1b}
 .auth-btn{width:100%;margin-top:8px}.remember{display:flex;align-items:center;gap:9px;margin:12px 0 2px;font-size:14px;color:#4b5563;cursor:pointer;user-select:none}.remember input{width:18px;height:18px;margin:0;accent-color:#111827}
 .error{color:#b42318;font-size:14px;min-height:20px;margin-top:10px}
 .top{padding:16px;margin-bottom:14px;position:sticky;top:10px;z-index:5}
@@ -61,7 +62,7 @@ input:focus,textarea:focus{border-color:#667eea;box-shadow:0 0 0 3px #667eea18}t
 <section id="app" class="hidden">
   <div class="wrap">
     <header class="top">
-      <div class="topline"><div><div class="title">Задачи</div><div id="userLine" class="userline"></div></div><button id="logoutBtn" class="btn secondary">Выйти</button></div>
+      <div class="topline"><div><div class="title">Задачи</div><div id="userLine" class="userline"></div></div><div style="display:flex;gap:8px;align-items:center"><button id="versionBtn" class="btn secondary" type="button">ℹ️ Проверить версию</button><button id="logoutBtn" class="btn secondary">Выйти</button></div></div>
       <div class="actions"><button id="addBtn" class="btn primary">＋ Добавить задачу</button></div>
       <div class="sorts">
         <select id="studentFilter" class="btn secondary filter-select"><option value="">Все ученики</option></select>
@@ -88,7 +89,21 @@ input:focus,textarea:focus{border-color:#667eea;box-shadow:0 0 0 3px #667eea18}t
   </div>
 </div>
 
+<div id="versionCheckBg" class="version-check-bg">
+  <div class="version-check-modal">
+    <div class="version-check-spinner" id="versionCheckSpinner"></div>
+    <div class="version-check-title">Проверка версии</div>
+    <div class="version-check-text" id="versionCheckText">Проверяем актуальность программы...</div>
+  </div>
+</div>
+
 <script>
+const APP_VERSION = "0.1.1";
+function showVersionCheck(text, success=false){const bg=$("versionCheckBg"),textEl=$("versionCheckText"),spinner=$("versionCheckSpinner");if(!bg||!textEl||!spinner)return;bg.style.display="flex";textEl.textContent=text;spinner.style.display=success?"none":"block"}
+function closeVersionCheck(){const bg=$("versionCheckBg");if(bg)bg.style.display="none"}
+async function checkVersionNow(){showVersionCheck("Проверяем актуальность программы...");try{const response=await fetch("version.json?check="+Date.now(),{cache:"no-store",headers:{"Cache-Control":"no-cache","Pragma":"no-cache"}});if(!response.ok){showVersionCheck("Не удалось получить версию с GitHub Pages.",true);setTimeout(closeVersionCheck,1800);return}const remote=await response.json();const remoteVersion=remote&&remote.version;if(!remoteVersion){showVersionCheck("GitHub Pages не вернул номер версии.",true);setTimeout(closeVersionCheck,1800);return}if(remoteVersion===APP_VERSION){showVersionCheck("✅ Версия актуальна: "+APP_VERSION+". Обновляем страницу...");}else{showVersionCheck("GitHub: "+remoteVersion+" | Загружена: "+APP_VERSION+". Обновляем страницу...")}setTimeout(()=>{window.location.replace(window.location.origin+window.location.pathname+"?refresh="+Date.now())},700)}catch(error){console.warn("Не удалось проверить версию:",error);showVersionCheck("Не удалось проверить версию. Проверьте соединение.",true);setTimeout(closeVersionCheck,1800)}}
+async function checkForProgramUpdate(){const updateKey="mama_update_target_version",attemptKey="mama_update_attempts",urlParams=new URLSearchParams(window.location.search),forcedVersion=urlParams.get("version");try{const controller=new AbortController();const timeoutId=setTimeout(()=>controller.abort(),5000);const response=await fetch("version.json?check="+Date.now(),{cache:"no-store",signal:controller.signal,headers:{"Cache-Control":"no-cache","Pragma":"no-cache"}});clearTimeout(timeoutId);if(!response.ok)return;const remote=await response.json();const remoteVersion=remote&&remote.version;if(!remoteVersion)return;if(forcedVersion===remoteVersion&&APP_VERSION===remoteVersion){sessionStorage.removeItem(updateKey);sessionStorage.removeItem(attemptKey);history.replaceState(null,"",window.location.pathname);return}if(APP_VERSION===remoteVersion){sessionStorage.removeItem(updateKey);sessionStorage.removeItem(attemptKey);return}let attempts=Number(sessionStorage.getItem(attemptKey)||"0");const targetVersion=sessionStorage.getItem(updateKey);if(targetVersion!==remoteVersion){attempts=0;sessionStorage.setItem(updateKey,remoteVersion)}if(attempts>=5){sessionStorage.removeItem(updateKey);sessionStorage.removeItem(attemptKey);return}attempts++;sessionStorage.setItem(attemptKey,String(attempts));showVersionCheck("Найдено обновление "+remoteVersion+". Обновляем программу...");setTimeout(()=>{window.location.replace(window.location.origin+window.location.pathname+"?version="+encodeURIComponent(remoteVersion)+"&refresh="+Date.now())},900)}catch(error){console.warn("Не удалось проверить обновление программы:",error)}}
+
 const SUPABASE_URL = 'https://lhfzvwlbnfvictowzvmp.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_xnF9H_s77aMohEhxmBA_PQ_t8ggXhl0';
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -209,6 +224,7 @@ $('loginForm').addEventListener('submit',async e=>{
   }
   session=data.session;startRealtime();show('auth',false);show('app',true);$('userLine').textContent=session.user.email||'';await loadTasks();
 });
+$('versionBtn').onclick=checkVersionNow;
 $('logoutBtn').onclick=async()=>{
   await sb.auth.signOut();
   localStorage.removeItem(REMEMBER_KEY);
@@ -233,6 +249,7 @@ sb.auth.onAuthStateChange((_event,s)=>{
 });
 
 (async()=>{
+  await checkForProgramUpdate();
   const {data}=await sb.auth.getSession();
   session=data.session;
   if(session){
