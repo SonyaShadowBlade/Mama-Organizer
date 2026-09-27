@@ -41,7 +41,7 @@ input:focus,textarea:focus{border-color:#667eea;box-shadow:0 0 0 3px #667eea18}t
 @media(min-width:700px){.modal{align-items:center;padding:20px}.modal-card{border-radius:20px}.wrap{padding-top:28px}}
 @media(max-width:520px){.wrap{padding:10px}.top{top:6px}.title{font-size:22px}.actions .btn{min-width:0}.auth-card{margin:6vh 10px;padding:22px}}
   .card-deadlines{margin-top:8px;display:grid;gap:4px;font-size:13px}.card-deadline-row{display:grid;grid-template-columns:105px 1fr;gap:8px;align-items:center}.card-deadline-label{font-weight:800;color:#6b7280}.card-deadline-value{font-weight:700;color:#374151}.task.urgent .card-deadline-value{color:#8a5700}.task.terminate .card-deadline-value{color:#fff}
-</style>
+.notification-control{margin:10px 0;padding:10px;border:1px solid #e5e7eb;border-radius:12px;background:#fafafa}.notification-title{font-weight:900;margin-bottom:7px}.notification-main{display:flex;gap:7px;align-items:center;font-weight:700}.notification-options{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin-top:8px}.notification-custom{display:flex;gap:8px;align-items:center;margin-top:8px}.notification-custom input{width:110px}.push-status{margin-top:6px;font-size:12px;color:#6b7280}</style>
 </head>
 <body>
 <section id="auth">
@@ -79,6 +79,7 @@ input:focus,textarea:focus{border-color:#667eea;box-shadow:0 0 0 3px #667eea18}t
   <div class="modal-card">
     <div class="modal-head"><div class="modal-head-left"><div id="modalTitle" class="modal-title">Новая задача</div><div class="urgency-control"><label for="urgency">Срочность:</label><select id="urgency"><option value="Посредственно">Посредственно</option><option value="срочно">Срочно</option><option value="TERMINATE">TERMINATE</option></select></div></div><button id="closeModal" class="icon" type="button">×</button></div>
     <form id="taskForm"><div class="deadline-control"><label for="deadlineDay">DEADLINE</label><select id="deadlineDay" aria-label="День"></select><select id="deadlineMonth" aria-label="Месяц"></select><select id="deadlineYear" aria-label="Год"></select><select id="deadlineTime" aria-label="Время"></select></div>
+      <div class="notification-control"><div class="notification-title">УВЕДОМЛЕНИЯ</div><label class="notification-main"><input id="notifyEnabled" type="checkbox" onchange="ensurePushPermission()"> Включить уведомления</label><div class="notification-options"><label><input type="checkbox" class="notify-offset" value="1440"> 24 ч</label><label><input type="checkbox" class="notify-offset" value="360"> 6 ч</label><label><input type="checkbox" class="notify-offset" value="180"> 3 ч</label><label><input type="checkbox" class="notify-offset" value="60"> 1 ч</label><label><input type="checkbox" class="notify-offset" value="30"> 30 мин</label><label><input type="checkbox" class="notify-offset" value="10"> 10 мин</label></div><div class="notification-custom"><label for="notifyCustom">Свой интервал, мин:</label><input id="notifyCustom" type="number" min="1" step="1" placeholder="например 45"></div><button id="pushPermissionBtn" type="button" class="btn secondary" onclick="ensurePushPermission()">Разрешить уведомления на этом телефоне</button><div id="pushStatus" class="push-status"></div></div>
       <input id="taskId" type="hidden">
       <div class="field"><label for="student">Имя ученика</label><textarea id="student" rows="2" placeholder="Имя и фамилия"></textarea></div>
       <div class="field"><label for="task">Задача</label><textarea id="task" rows="2" required placeholder="Например: проверить контрольную"></textarea></div>
@@ -99,7 +100,7 @@ input:focus,textarea:focus{border-color:#667eea;box-shadow:0 0 0 3px #667eea18}t
 </div>
 
 <script>
-const APP_VERSION = "0.1.7";
+const APP_VERSION = "0.1.8";
 function showVersionCheck(text, success=false){const bg=$("versionCheckBg"),textEl=$("versionCheckText"),spinner=$("versionCheckSpinner");if(!bg||!textEl||!spinner)return;bg.style.display="flex";textEl.textContent=text;spinner.style.display=success?"none":"block"}
 function closeVersionCheck(){const bg=$("versionCheckBg");if(bg)bg.style.display="none"}
 async function checkVersionNow(){showVersionCheck("Проверяем актуальность программы...");try{const response=await fetch("version.json?check="+Date.now(),{cache:"no-store",headers:{"Cache-Control":"no-cache","Pragma":"no-cache"}});if(!response.ok){showVersionCheck("Не удалось получить версию с GitHub Pages.",true);setTimeout(closeVersionCheck,1800);return}const remote=await response.json();const remoteVersion=remote&&remote.version;if(!remoteVersion){showVersionCheck("GitHub Pages не вернул номер версии.",true);setTimeout(closeVersionCheck,1800);return}if(remoteVersion===APP_VERSION){showVersionCheck("✅ Версия актуальна: "+APP_VERSION+". Обновляем страницу...");}else{showVersionCheck("GitHub: "+remoteVersion+" | Загружена: "+APP_VERSION+". Обновляем страницу...")}setTimeout(()=>{window.location.replace(window.location.origin+window.location.pathname+"?refresh="+Date.now())},700)}catch(error){console.warn("Не удалось проверить версию:",error);showVersionCheck("Не удалось проверить версию. Проверьте соединение.",true);setTimeout(closeVersionCheck,1800)}}
@@ -219,16 +220,22 @@ function getDeadlineValue(){
   if(date.getFullYear()!==Number(y)||date.getMonth()!==Number(m)-1||date.getDate()!==Number(d))return null;
   return date.toISOString();
 }
+const VAPID_PUBLIC_KEY='BF1gbfINyUjD4fYP8KkOEjCahULPCPLCbNiT8p4XZU7veLJfEFBnse_B4MzHnC6T0fDLJq2NLy0FgvjIwuRHWuE';
+function urlBase64ToUint8Array(base64String){const padding='='.repeat((4-base64String.length%4)%4);const base64=(base64String+padding).replace(/-/g,'+').replace(/_/g,'/');const raw=atob(base64);return Uint8Array.from([...raw].map(c=>c.charCodeAt(0)));}
+function setNotificationOptions(enabled,offsets){$('notifyEnabled').checked=!!enabled;document.querySelectorAll('.notify-offset').forEach(x=>x.checked=offsets.includes(Number(x.value)));const custom=offsets.find(x=>![1440,360,180,60,30,10].includes(Number(x)));$('notifyCustom').value=custom||'';}
+function getNotificationOffsets(){const a=[...document.querySelectorAll('.notify-offset:checked')].map(x=>Number(x.value));const custom=Number($('notifyCustom').value);if(custom>0)a.push(Math.floor(custom));return [...new Set(a)].sort((x,y)=>y-x);}
+async function ensurePushPermission(){if(!$('notifyEnabled').checked)return true;if(!('Notification'in window)||!('serviceWorker'in navigator)||!('PushManager'in window)){ $('pushStatus').textContent='Этот браузер не поддерживает push-уведомления.';return false;}try{const permission=await Notification.requestPermission();if(permission!=='granted'){ $('pushStatus').textContent='Разрешение на уведомления не выдано.';return false;}const reg=await navigator.serviceWorker.register('./sw.js');let sub=await reg.pushManager.getSubscription();if(!sub)sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:urlBase64ToUint8Array(VAPID_PUBLIC_KEY)});const j=sub.toJSON();const {error}=await sb.from('push_subscriptions').upsert({user_id:session.user.id,endpoint:j.endpoint,p256dh:j.keys.p256dh,auth:j.keys.auth,updated_at:new Date().toISOString()},{onConflict:'endpoint'});if(error)throw error;$('pushStatus').textContent='Уведомления разрешены на этом телефоне.';return true;}catch(e){$('pushStatus').textContent='Не удалось включить уведомления: '+e.message;return false;}}
 function openModal(t=null){
   fillDeadlineOptions();
   $('taskId').value=t?.id||'';$('task').value=t?.task||'';$('student').value=t?.student_name||'';$('className').value=t?.class_name||'';$('notes').value=t?.notes||'';$('urgency').value=t?.urgency||'Посредственно';
-  setDeadlineValue(t?.deadline||null);
+  setDeadlineValue(t?.deadline||null);setNotificationOptions(t?.notification_enabled,t?.notification_offsets||[]);
   $('modalTitle').textContent=t?'Изменить задачу':'Новая задача';$('formError').textContent='';show('modal',true);setTimeout(()=>$('task').focus(),50);
 }
 function closeModal(){show('modal',false)}
 async function saveTask(e){
   e.preventDefault();$('formError').textContent='';
-  const payload={task:$('task').value.trim(),student_name:$('student').value.trim(),class_name:$('className').value.trim(),notes:$('notes').value.trim(),urgency:$('urgency').value,deadline:getDeadlineValue(),updated_at:new Date().toISOString()};
+  const offsets=getNotificationOffsets();const notifyEnabled=$('notifyEnabled').checked&&offsets.length>0;
+  const payload={task:$('task').value.trim(),student_name:$('student').value.trim(),class_name:$('className').value.trim(),notes:$('notes').value.trim(),urgency:$('urgency').value,deadline:getDeadlineValue(),notification_enabled:notifyEnabled,notification_offsets:offsets,updated_at:new Date().toISOString()};
   if(!payload.task){$('formError').textContent='Введите задачу.';return}
   const id=$('taskId').value;
   const q=id?sb.from('tasks').update(payload).eq('id',id):sb.from('tasks').insert(payload);
