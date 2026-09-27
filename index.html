@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#111827">
 <title>Органайзер</title>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/@sb/sb-js@2"></script>
 <style>
 :root{font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#172033;background:#f3f5f8}
 *{box-sizing:border-box}body{margin:0;min-height:100vh}.hidden{display:none!important}
@@ -90,9 +90,9 @@ input:focus,textarea:focus{border-color:#667eea;box-shadow:0 0 0 3px #667eea18}t
 </div>
 
 <script>
-const SUPABASE_URL = 'https://lhfzvwlbnfvictowzvmp.supabase.co';
+const SUPABASE_URL = 'https://lhfzvwlbnfvictowzvmp.sb.co';
 const SUPABASE_KEY = 'sb_publishable_xnF9H_s77aMohEhxmBA_PQ_t8ggXhl0';
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const sb = window.sb.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 const REMEMBER_KEY = 'mama_organizer_remember';
 const LOGIN_KEY = 'mama_organizer_login';
@@ -107,7 +107,7 @@ function setStatus(s){$('status').textContent=s||''}
 async function loadTasks(){
   if(!session)return;
   setStatus('Загрузка…');
-  const {data,error}=await supabase.from('tasks').select('*').order('created_at',{ascending:false});
+  const {data,error}=await sb.from('tasks').select('*').order('created_at',{ascending:false});
   if(error){setStatus('Не удалось загрузить задачи: '+error.message);return}
   tasks=data||[];render();
 }
@@ -139,20 +139,20 @@ async function saveTask(e){
   const payload={task:$('task').value.trim(),student_name:$('student').value.trim(),class_name:$('className').value.trim(),notes:$('notes').value.trim(),updated_at:new Date().toISOString()};
   if(!payload.task){$('formError').textContent='Введите задачу.';return}
   const id=$('taskId').value;
-  const q=id?supabase.from('tasks').update(payload).eq('id',id):supabase.from('tasks').insert(payload);
+  const q=id?sb.from('tasks').update(payload).eq('id',id):sb.from('tasks').insert(payload);
   const {error}=await q;
   if(error){$('formError').textContent=error.message;return}
   closeModal();await loadTasks();
 }
 window.toggleTask=async(id,completed)=>{
-  const {error}=await supabase.from('tasks').update({completed,updated_at:new Date().toISOString()}).eq('id',id);
+  const {error}=await sb.from('tasks').update({completed,updated_at:new Date().toISOString()}).eq('id',id);
   if(error){setStatus('Ошибка: '+error.message);return} const t=tasks.find(x=>x.id===id);if(t)t.completed=completed;render();
 };
 window.editTask=id=>{const t=tasks.find(x=>x.id===id);if(t)openModal(t)};
 window.deleteTask=async id=>{
   const t=tasks.find(x=>x.id===id);if(!t)return;
   if(!confirm('Удалить эту задачу?'))return;
-  const {error}=await supabase.from('tasks').delete().eq('id',id);
+  const {error}=await sb.from('tasks').delete().eq('id',id);
   if(error){setStatus('Ошибка: '+error.message);return} await loadTasks();
 };
 
@@ -178,7 +178,7 @@ $('loginForm').addEventListener('submit',async e=>{
     localStorage.removeItem(REMEMBER_KEY);
     localStorage.removeItem(LOGIN_KEY);
   }
-  const {data,error}=await supabase.auth.signInWithPassword({email:login,password:$('password').value});
+  const {data,error}=await sb.auth.signInWithPassword({email:login,password:$('password').value});
   if(error){
     localStorage.removeItem(REMEMBER_KEY);
     localStorage.removeItem(LOGIN_KEY);
@@ -188,7 +188,7 @@ $('loginForm').addEventListener('submit',async e=>{
   session=data.session;show('auth',false);show('app',true);$('userLine').textContent=session.user.email||'';await loadTasks();
 });
 $('logoutBtn').onclick=async()=>{
-  await supabase.auth.signOut();
+  await sb.auth.signOut();
   localStorage.removeItem(REMEMBER_KEY);
   localStorage.removeItem(LOGIN_KEY);
   session=null;show('app',false);show('auth',true);
@@ -198,7 +198,7 @@ $('modal').addEventListener('click',e=>{if(e.target===$('modal'))closeModal()});
 $('taskForm').addEventListener('submit',saveTask);
 document.querySelectorAll('.sort').forEach(b=>b.onclick=()=>{sortMode=b.dataset.sort;document.querySelectorAll('.sort').forEach(x=>x.classList.toggle('active',x===b));render()});
 
-supabase.auth.onAuthStateChange((_event,s)=>{
+sb.auth.onAuthStateChange((_event,s)=>{
   session=s;
   if(s){
     show('auth',false);show('app',true);
@@ -210,13 +210,13 @@ supabase.auth.onAuthStateChange((_event,s)=>{
 });
 
 (async()=>{
-  const {data}=await supabase.auth.getSession();
+  const {data}=await sb.auth.getSession();
   session=data.session;
   if(session){
     if(localStorage.getItem(REMEMBER_KEY)==='1'){
       show('auth',false);show('app',true);$('userLine').textContent=session.user.email||'';await loadTasks();
     }else{
-      await supabase.auth.signOut();
+      await sb.auth.signOut();
     }
   }
 })();
