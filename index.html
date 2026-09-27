@@ -101,7 +101,7 @@ input:focus,textarea:focus{border-color:#667eea;box-shadow:0 0 0 3px #667eea18}t
 
 <script>
 const APP_VERSION = "0.1.9";
-history.replaceState({appBase:true},'',window.location.pathname);history.pushState({appRoot:true},'',window.location.pathname);rootBackGuard=true;
+history.replaceState({appBase:true},'',window.location.pathname);history.pushState({appRoot:true},'',window.location.pathname);
 function showVersionCheck(text, success=false){const bg=$("versionCheckBg"),textEl=$("versionCheckText"),spinner=$("versionCheckSpinner");if(!bg||!textEl||!spinner)return;bg.style.display="flex";textEl.textContent=text;spinner.style.display=success?"none":"block"}
 function closeVersionCheck(){const bg=$("versionCheckBg");if(bg)bg.style.display="none"}
 async function checkVersionNow(){showVersionCheck("Проверяем актуальность программы...");try{const response=await fetch("version.json?check="+Date.now(),{cache:"no-store",headers:{"Cache-Control":"no-cache","Pragma":"no-cache"}});if(!response.ok){showVersionCheck("Не удалось получить версию с GitHub Pages.",true);setTimeout(closeVersionCheck,1800);return}const remote=await response.json();const remoteVersion=remote&&remote.version;if(!remoteVersion){showVersionCheck("GitHub Pages не вернул номер версии.",true);setTimeout(closeVersionCheck,1800);return}if(remoteVersion===APP_VERSION){showVersionCheck("✅ Версия актуальна: "+APP_VERSION+". Обновляем страницу...");}else{showVersionCheck("GitHub: "+remoteVersion+" | Загружена: "+APP_VERSION+". Обновляем страницу...")}setTimeout(()=>{window.location.replace(window.location.origin+window.location.pathname+"?refresh="+Date.now())},700)}catch(error){console.warn("Не удалось проверить версию:",error);showVersionCheck("Не удалось проверить версию. Проверьте соединение.",true);setTimeout(closeVersionCheck,1800)}}
@@ -224,26 +224,21 @@ function getDeadlineValue(){
 }
 let modalHistoryOpen=false;
 let backPressAt=0;
-let rootBackGuard=false;
-function armRootBackGuard(){
-  if(rootBackGuard)return;
-  history.pushState({appRootGuard:true},'',window.location.pathname);
-  rootBackGuard=true;
-}
+let allowAppExit=false;
 window.addEventListener('popstate',()=>{
   if(modalHistoryOpen){modalHistoryOpen=false;show('modal',false);return}
   if(!$('app').classList.contains('hidden')){
+    if(allowAppExit){allowAppExit=false;return}
     const now=Date.now();
     if(now-backPressAt<100){
-      backPressAt=0;
-      rootBackGuard=false;
-      setStatus('');
+      allowAppExit=true;
+      history.back();
       return;
     }
     backPressAt=now;
-    armRootBackGuard();
-    setStatus('Нажмите «Назад» ещё раз в течение 0,1 сек., чтобы выйти из приложения');
-    setTimeout(()=>{if(Date.now()-backPressAt>=100){backPressAt=0;$('status').textContent=''}},200);
+    history.pushState({appRoot:true},'',window.location.pathname);
+    setStatus('Нажмите «Назад» ещё раз, чтобы выйти из приложения');
+    setTimeout(()=>{if(Date.now()-backPressAt>=100)$('status').textContent=''},200);
   }
 });
 const VAPID_PUBLIC_KEY='BF1gbfINyUjD4fYP8KkOEjCahULPCPLCbNiT8p4XZU7veLJfEFBnse_B4MzHnC6T0fDLJq2NLy0FgvjIwuRHWuE';
