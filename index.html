@@ -79,9 +79,9 @@ input:focus,textarea:focus{border-color:#667eea;box-shadow:0 0 0 3px #667eea18}t
     <div class="modal-head"><div id="modalTitle" class="modal-title">Новая задача</div><button id="closeModal" class="icon" type="button">×</button></div>
     <form id="taskForm">
       <input id="taskId" type="hidden">
-      <div class="field"><label for="student">Имя ученика</label><input id="student" placeholder="Имя и фамилия"></div>
-      <div class="field"><label for="task">Задача</label><input id="task" required placeholder="Например: проверить контрольную"></div>
-      <div class="field"><label for="className">Класс</label><input id="className" placeholder="Например: 7А"></div>
+      <div class="field"><label for="student">Имя ученика</label><textarea id="student" rows="2" placeholder="Имя и фамилия"></textarea></div>
+      <div class="field"><label for="task">Задача</label><textarea id="task" rows="2" required placeholder="Например: проверить контрольную"></textarea></div>
+      <div class="field"><label for="className">Класс</label><textarea id="className" rows="2" placeholder="Например: 7А"></textarea></div>
       <div class="field"><label for="notes">Примечание</label><textarea id="notes" placeholder="Дополнительная информация"></textarea></div>
       <div class="modal-actions"><button class="btn secondary" id="cancelBtn" type="button">Отмена</button><button class="btn primary" type="submit">Сохранить</button></div>
       <div id="formError" class="error"></div>
@@ -165,28 +165,6 @@ function render(){
     </article>`).join(''):'<div class="empty">Задач пока нет.<br>Нажмите «＋ Добавить задачу».</div>';
   setStatus('Всего задач: '+tasks.length+(tasks.filter(t=>t.completed).length?' · выполнено: '+tasks.filter(t=>t.completed).length:''));
 }
-function setupKeyboardNavigation(){
-  const forms=document.querySelectorAll('form');
-  forms.forEach(form=>{
-    const fields=[...form.querySelectorAll('input:not([type="hidden"]):not([type="checkbox"]):not([type="submit"]), textarea')];
-    fields.forEach((field,i)=>{
-      if(field.tagName==='TEXTAREA'){
-        field.setAttribute('enterkeyhint','enter');
-        return;
-      }
-      field.setAttribute('enterkeyhint',i<fields.length-1?'next':'done');
-      field.addEventListener('keydown',e=>{
-        if(e.key==='Enter'){
-          e.preventDefault();
-          const next=fields[i+1];
-          if(next){next.focus();next.select?.();}
-          else field.blur();
-        }
-      });
-    });
-  });
-}
-
 function openModal(t=null){
   $('taskId').value=t?.id||'';$('task').value=t?.task||'';$('student').value=t?.student_name||'';$('className').value=t?.class_name||'';$('notes').value=t?.notes||'';
   $('modalTitle').textContent=t?'Изменить задачу':'Новая задача';$('formError').textContent='';show('modal',true);setTimeout(()=>$('task').focus(),50);
