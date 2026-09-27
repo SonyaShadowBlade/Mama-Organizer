@@ -141,7 +141,7 @@ async function loadTasks(){
 }
 function render(){
   let a=[...tasks];
-  const students=[...new Set(tasks.map(t=>(t.task||'').trim()).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'ru',{sensitivity:'base'}));
+  const students=[...new Set(tasks.map(t=>(t.student_name||'').trim()).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'ru',{sensitivity:'base'}));
   const classes=[...new Set(tasks.map(t=>(t.class_name||'').trim()).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'ru',{numeric:true,sensitivity:'base'}));
   const sf=$('studentFilter'),cf=$('classFilter');
   const oldStudent=sf.value,oldClass=cf.value;
@@ -149,7 +149,7 @@ function render(){
   cf.innerHTML='<option value="">Все классы</option>'+classes.map(v=>'<option value="'+esc(v)+'">'+esc(v)+'</option>').join('');
   if(students.includes(oldStudent))sf.value=oldStudent;
   if(classes.includes(oldClass))cf.value=oldClass;
-  if(sf.value)a=a.filter(t=>(t.task||'').trim()===sf.value);
+  if(sf.value)a=a.filter(t=>(t.student_name||'').trim()===sf.value);
   if(cf.value)a=a.filter(t=>(t.class_name||'').trim()===cf.value);
   $('list').innerHTML=a.length?a.map(t=>`
     <article class="task ${t.completed?'done':''}" onclick="openTaskFromCard(event,\'${t.id}\')">
