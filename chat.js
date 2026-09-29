@@ -4,177 +4,140 @@
   const MAMA_KEY = "sb_publishable_xnF9H_s77aMohEhxmBA_PQ_t8ggXhl0";
   const STO_URL = "https://lurjmjgtqogwlxkyauso.supabase.co";
   const STO_KEY = "sb_publishable_CwQfxteL0l2-xO7UiclS6g_kJ7IcBvk";
-  const allowed = new Set(["gutfeeling3@gmail.com","komarov.aleksandr.1@gmail.com"]);
   const isMama = !!document.getElementById("app");
   const CHAT_TITLE = isMama ? "Чат с Admin" : "Чат с Mama";
+  let client=null, role=null, timer=null, opened=false, messages=[];
 
-  let client = null;
-  let role = null;
-  let timer = null;
-  let opened = false;
-  let lastSignature = "";
+  const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+  const fmt=v=>{try{return new Date(v).toLocaleString("ru-RU",{day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"})}catch(_){return ""}};
 
-  function esc(v) {
-    return String(v ?? "").replace(/[&<>"']/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
-  }
-
-  function fmt(v) {
-    try {
-      return new Date(v).toLocaleString("ru-RU", {day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"});
-    } catch (_) { return ""; }
-  }
-
-  function css() {
-    if (document.getElementById("mamaStoChatStyle")) return;
-    const s = document.createElement("style");
-    s.id = "mamaStoChatStyle";
-    s.textContent = `
-      #mamaStoChatButton{display:none;margin-top:8px;width:auto;min-width:150px;max-width:190px;min-height:42px;padding:8px 14px;font-size:14px;font-weight:800}#mamaStoChatButton.mama-sto-unread{background:#facc15!important;color:#111827!important;box-shadow:0 0 0 3px rgba(250,204,21,.28)}.mama-sto-chat-badge{display:inline-flex;align-items:center;justify-content:center;min-width:20px;height:20px;padding:0 6px;margin-left:5px;border-radius:999px;background:#dc2626;color:#fff;font-size:12px;font-weight:900}
+  function css(){
+    if(document.getElementById("mamaStoChatStyle"))return;
+    const s=document.createElement("style");s.id="mamaStoChatStyle";
+    s.textContent=`
+      #mamaStoChatButton{display:none!important;width:auto!important;min-width:150px;max-width:190px;min-height:42px;padding:8px 14px;font-size:14px;font-weight:800}
+      #mamaStoChatButton.mama-sto-unread{background:#facc15!important;color:#111827!important;box-shadow:0 0 0 3px rgba(250,204,21,.3)!important}
+      .mama-sto-chat-badge{display:inline-flex;align-items:center;justify-content:center;min-width:20px;height:20px;padding:0 6px;margin-left:6px;border-radius:999px;background:#dc2626;color:#fff;font-size:12px;font-weight:900}
       .mama-sto-chat-bg{position:fixed;inset:0;background:rgba(15,23,42,.55);display:none;align-items:center;justify-content:center;z-index:100000;padding:16px;box-sizing:border-box}
-      .mama-sto-chat-bg.open{display:flex}
-      .mama-sto-chat{width:min(620px,100%);max-height:min(760px,92vh);background:#fff;border-radius:18px;box-shadow:0 18px 50px rgba(0,0,0,.25);display:flex;flex-direction:column;overflow:hidden}
+      .mama-sto-chat-bg.open{display:flex}.mama-sto-chat{width:min(620px,100%);max-height:92vh;background:#fff;border-radius:18px;box-shadow:0 18px 50px rgba(0,0,0,.25);display:flex;flex-direction:column;overflow:hidden}
       .mama-sto-chat-head{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid #e5e7eb;font-weight:900;font-size:18px}
-      .mama-sto-chat-close{background:transparent!important;font-size:26px!important;padding:2px 8px!important}
       .mama-sto-chat-list{padding:14px;overflow:auto;display:flex;flex-direction:column;gap:9px;min-height:260px}
       .mama-sto-msg{max-width:82%;padding:9px 11px;border-radius:13px;background:#f1f5f9;align-self:flex-start;white-space:pre-wrap;overflow-wrap:anywhere}
-      .mama-sto-msg.mine{align-self:flex-end;background:#dbeafe}
-      .mama-sto-meta{font-size:11px;color:#64748b;margin-top:4px}
-      .mama-sto-chat-form{display:flex;gap:8px;padding:12px;border-top:1px solid #e5e7eb}
-      .mama-sto-chat-input{flex:1;min-height:44px;max-height:120px;resize:vertical;padding:9px 10px;border:1px solid #cbd5e1;border-radius:10px;box-sizing:border-box}
-      .mama-sto-chat-status{font-size:12px;color:#64748b;padding:0 14px 8px;min-height:16px}
-    `;
-    document.head.appendChild(s);
+      .mama-sto-msg.mine{align-self:flex-end;background:#dbeafe}.mama-sto-meta{font-size:11px;color:#64748b;margin-top:4px}
+      .mama-sto-chat-form{display:flex;gap:8px;padding:12px;border-top:1px solid #e5e7eb}.mama-sto-chat-input{flex:1;min-height:44px;max-height:120px;resize:vertical;padding:9px 10px;border:1px solid #cbd5e1;border-radius:10px}
+      .mama-sto-chat-status{font-size:12px;color:#64748b;padding:0 14px 8px;min-height:16px}.mama-sto-msg-actions{display:flex;gap:5px;margin-top:5px}.mama-sto-msg-actions button{font-size:11px;padding:3px 7px;border-radius:7px;background:#fff;border:1px solid #cbd5e1}
+    `;document.head.appendChild(s);
   }
 
-  function addButton() {
-    if (document.getElementById("mamaStoChatButton")) return;
-    let host = null;
-    if (isMama) host = document.querySelector(".actions");
-    else host = document.querySelector(".sanechka-main-buttons");
-    if (!host) return;
-    const b = document.createElement("button");
-    b.id = "mamaStoChatButton";
-    b.className = isMama ? "btn secondary" : "sanechka-main-button";
-    b.textContent = "💬 " + CHAT_TITLE;
-    if (!isMama) b.style.cssText = "min-height:80px;font-size:22px;font-weight:900;background:#374151;color:#fff;";
-    b.type = "button";
-    b.onclick = openChat;
-    host.appendChild(b);
+  function setUnread(n){
+    const b=document.getElementById("mamaStoChatButton"); if(!b)return;
+    const count=Math.max(0,Number(n)||0);
+    b.classList.toggle("mama-sto-unread",count>0);
+    b.style.setProperty("background",count>0?"#facc15":"", "important");
+    b.style.setProperty("color",count>0?"#111827":"", "important");
+    let badge=b.querySelector(".mama-sto-chat-badge");
+    if(count>0){
+      if(!badge){badge=document.createElement("span");badge.className="mama-sto-chat-badge";b.appendChild(badge)}
+      badge.textContent=count>99?"99+":String(count);
+    }else if(badge)badge.remove();
+    b.setAttribute("aria-label",CHAT_TITLE+(count?": "+count+" непрочитанных":""));
   }
 
-  function addModal() {
-    if (document.getElementById("mamaStoChatModal")) return;
-    const bg = document.createElement("div");
-    bg.id = "mamaStoChatModal";
-    bg.className = "mama-sto-chat-bg";
-    bg.innerHTML = `
-      <div class="mama-sto-chat" role="dialog" aria-modal="true" aria-label="${esc(CHAT_TITLE)}">
-        <div class="mama-sto-chat-head"><span>${esc(CHAT_TITLE)}</span><button class="mama-sto-chat-close" type="button">✕</button></div>
-        <div id="mamaStoChatList" class="mama-sto-chat-list"></div>
-        <div id="mamaStoChatStatus" class="mama-sto-chat-status"></div>
-        <form id="mamaStoChatForm" class="mama-sto-chat-form">
-          <textarea id="mamaStoChatInput" class="mama-sto-chat-input" maxlength="4000" placeholder="Сообщение..." required></textarea>
-          <button class="btn primary" type="submit">📨</button>
-        </form>
-      </div>`;
-    document.body.appendChild(bg);
-    bg.querySelector(".mama-sto-chat-close").onclick = closeChat;
-    bg.addEventListener("click", e => { if (e.target === bg) closeChat(); });
-    bg.querySelector("#mamaStoChatForm").addEventListener("submit", async e => {
-      e.preventDefault();
-      const input = document.getElementById("mamaStoChatInput");
-      const text = input.value.trim();
-      if (!text) return;
-      setStatus("Отправляем...");
-      try {
-        const token = await getToken();
-        const r = await fetch(FUNCTION_URL, {method:"POST",headers:{"Content-Type":"application/json","Authorization":"Bearer "+token},body:JSON.stringify({body:text})});
-        const data = await r.json().catch(()=>({}));
-        if (!r.ok) throw new Error(data.error || "Не удалось отправить сообщение");
-        input.value = "";
-        await loadMessages();
-        setStatus("");
-      } catch (err) { setStatus(err.message || "Ошибка отправки"); }
-    });
-  }
-
-  function setStatus(v) {
-    const el = document.getElementById("mamaStoChatStatus");
-    if (el) el.textContent = v || "";
-  }
-
-  async function getToken() {
-    if (!client) {
-      client = window.supabase.createClient(isMama ? MAMA_URL : STO_URL, isMama ? MAMA_KEY : STO_KEY);
+  function addButton(){
+    let b=document.getElementById("mamaStoChatButton");
+    if(!b){
+      const host=isMama?document.querySelector(".actions"):document.querySelector(".sanechka-main-buttons");
+      if(!host)return;
+      b=document.createElement("button");b.id="mamaStoChatButton";b.className=isMama?"btn secondary":"sanechka-main-button";b.type="button";host.appendChild(b);
+      b.onclick=openChat;
     }
-    const {data,error} = await client.auth.getSession();
-    if (error || !data.session?.access_token) throw new Error("Сессия не найдена. Войдите в приложение.");
+    b.innerHTML="💬 "+esc(CHAT_TITLE)+' <span class="mama-sto-chat-badge" style="display:none"></span>';
+    b.style.display="inline-flex";
+  }
+
+  async function getToken(){
+    if(!client)client=window.supabase.createClient(isMama?MAMA_URL:STO_URL,isMama?MAMA_KEY:STO_KEY);
+    const {data,error}=await client.auth.getSession();
+    if(error||!data.session?.access_token)throw new Error("Сессия не найдена. Войдите в приложение.");
     return data.session.access_token;
   }
 
-  async function refreshAccess() {
-    try {
-      const token = await getToken();
-      const r = await fetch(FUNCTION_URL, {headers:{Authorization:"Bearer "+token}});
-      const data = await r.json().catch(()=>({}));
-      if (!r.ok) throw new Error(data.error || "Нет доступа");
-      role = data.role;
-      const b = document.getElementById("mamaStoChatButton");
-      if (b) b.style.display = "block";
-      return data.messages || [];
-    } catch (_) {
-      const b = document.getElementById("mamaStoChatButton");
-      if (b) b.style.display = "none";
-      return null;
+  async function request(action="get",extra={}){
+    const token=await getToken();
+    const opts={headers:{Authorization:"Bearer "+token}};
+    if(action!=="get"){opts.method="POST";opts.headers["Content-Type"]="application/json";opts.body=JSON.stringify({action,...extra})}
+    const r=await fetch(FUNCTION_URL,opts),data=await r.json().catch(()=>({}));
+    if(!r.ok)throw new Error(data.error||"Ошибка чата");
+    return data;
+  }
+
+  function render(){
+    const list=document.getElementById("mamaStoChatList");if(!list)return;
+    list.innerHTML=messages.length?messages.map(m=>{
+      const mine=m.sender_role===role, deleted=!!m.deleted_at;
+      const status=mine?(m.read_at?"✓✓":m.delivered_at?"✓":"◷"):"";
+      const body=deleted?"Сообщение удалено":esc(m.body);
+      const actions=mine&&!deleted?`<div class="mama-sto-msg-actions"><button type="button" data-edit="${esc(m.id)}">Изменить</button><button type="button" data-del="${esc(m.id)}">Удалить</button></div>`:"";
+      return `<div class="mama-sto-msg ${mine?"mine":""}"><div>${body}</div><div class="mama-sto-meta">${mine?"Вы":(isMama?"Admin":"Mama")} · ${esc(fmt(m.created_at))} ${status} ${m.edited_at&&!deleted?"· изменено":""}</div>${actions}</div>`;
+    }).join(""):'<div style="color:#64748b;text-align:center;padding:40px 10px">Пока сообщений нет.</div>';
+    list.querySelectorAll("[data-edit]").forEach(x=>x.onclick=()=>editMessage(x.dataset.edit));
+    list.querySelectorAll("[data-del]").forEach(x=>x.onclick=()=>deleteMessage(x.dataset.del));
+    list.scrollTop=list.scrollHeight;
+  }
+
+  async function loadMessages(markRead=opened){
+    try{
+      const data=await request("get");
+      role=data.role;messages=data.messages||[];
+      addButton();
+      const unread=messages.filter(m=>m.recipient_role===role&&!m.read_at&&!m.deleted_at).length;
+      setUnread(unread);
+      if(markRead&&unread){
+        await request("read");
+        messages=messages.map(m=>m.recipient_role===role&&!m.read_at?({...m,read_at:new Date().toISOString(),delivered_at:m.delivered_at||new Date().toISOString()}):m);
+        setUnread(0);
+      }
+      if(opened)render();
+    }catch(e){
+      const b=document.getElementById("mamaStoChatButton");if(b)b.style.display="none";
+      if(opened)setStatus(e.message||"Ошибка чата");
     }
   }
 
-  async function loadMessages() {
-    const messages = await refreshAccess();
-    if (!messages) return;
-    const sig = messages.map(x => x.id + ":" + x.created_at).join("|");
-    if (sig === lastSignature && !opened) return;
-    lastSignature = sig;
-    const list = document.getElementById("mamaStoChatList");
-    if (!list) return;
-    list.innerHTML = messages.length ? messages.map(m => `
-      <div class="mama-sto-msg ${m.sender_role === role ? "mine" : ""}">
-        <div>${esc(m.body)}</div>
-        <div class="mama-sto-meta">${m.sender_role === role ? "Вы" : (isMama ? "Admin" : "Mama")} · ${esc(fmt(m.created_at))}</div>
-      </div>`).join("") : '<div style="color:#64748b;text-align:center;padding:40px 10px;">Пока сообщений нет.</div>';
-    list.scrollTop = list.scrollHeight;
+  function setStatus(v){const e=document.getElementById("mamaStoChatStatus");if(e)e.textContent=v||""}
+
+  function addModal(){
+    if(document.getElementById("mamaStoChatModal"))return;
+    const bg=document.createElement("div");bg.id="mamaStoChatModal";bg.className="mama-sto-chat-bg";
+    bg.innerHTML=`<div class="mama-sto-chat"><div class="mama-sto-chat-head"><span>${esc(CHAT_TITLE)}</span><button id="mamaStoClose" type="button">✕</button></div><div id="mamaStoChatList" class="mama-sto-chat-list"></div><div id="mamaStoChatStatus" class="mama-sto-chat-status"></div><form id="mamaStoChatForm" class="mama-sto-chat-form"><textarea id="mamaStoChatInput" class="mama-sto-chat-input" maxlength="4000" placeholder="Сообщение..." required></textarea><button class="btn primary" type="submit">📨</button></form></div>`;
+    document.body.appendChild(bg);document.getElementById("mamaStoClose").onclick=closeChat;bg.addEventListener("click",e=>{if(e.target===bg)closeChat()});
+    document.getElementById("mamaStoChatForm").onsubmit=async e=>{e.preventDefault();const input=document.getElementById("mamaStoChatInput"),body=input.value.trim();if(!body)return;setStatus("Отправляем…");try{await request("send",{body});input.value="";await loadMessages(false);setStatus("")}catch(err){setStatus(err.message)}};
   }
 
-  async function openChat() {
-    addModal();
-    const bg = document.getElementById("mamaStoChatModal");
-    bg.classList.add("open");
-    opened = true;
-    await loadMessages();
-    document.getElementById("mamaStoChatInput")?.focus();
+  async function editMessage(id){
+    const m=messages.find(x=>x.id===id);if(!m||m.deleted_at)return;
+    const body=prompt("Изменить сообщение:",m.body);if(body===null)return;
+    const text=body.trim();if(!text)return;
+    try{await request("edit",{id,body:text});await loadMessages(false)}catch(e){setStatus(e.message)}
+  }
+  async function deleteMessage(id){
+    if(!confirm("Удалить это сообщение?"))return;
+    try{await request("delete",{id});await loadMessages(false)}catch(e){setStatus(e.message)}
   }
 
-  function closeChat() {
-    const bg = document.getElementById("mamaStoChatModal");
-    if (bg) bg.classList.remove("open");
-    opened = false;
+  async function openChat(){
+    addModal();document.getElementById("mamaStoChatModal").classList.add("open");opened=true;
+    await loadMessages(true);document.getElementById("mamaStoChatInput")?.focus();
+  }
+  function closeChat(){document.getElementById("mamaStoChatModal")?.classList.remove("open");opened=false}
+
+  async function init(){
+    if(!window.supabase)return;css();addButton();addModal();await loadMessages(false);
+    if(timer)clearInterval(timer);timer=setInterval(()=>loadMessages(opened),1500);
+    document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible")loadMessages(opened)});
   }
 
-  async function init() {
-    if (!window.supabase) return;
-    css();
-    addButton();
-    addModal();
-    await loadMessages();
-    if (timer) clearInterval(timer);
-    timer = setInterval(() => loadMessages(), 1800);
-    document.addEventListener("visibilitychange", () => {
-      if (document.visibilityState === "visible") loadMessages();
-    });
-  }
-
-  window.mamaStoChat = {open:openChat, close:closeChat, refresh:loadMessages};
-  setInterval(() => { if (!document.getElementById("mamaStoChatButton")) addButton(); }, 1000);
-  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init, {once:true});
-  else init();
+  window.mamaStoChat={open:openChat,close:closeChat,refresh:()=>loadMessages(false)};
+  setInterval(addButton,1000);
+  if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",init,{once:true});else init();
 })();
