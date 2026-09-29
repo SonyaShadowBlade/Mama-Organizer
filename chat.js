@@ -29,7 +29,7 @@
     const s = document.createElement("style");
     s.id = "mamaStoChatStyle";
     s.textContent = `
-      #mamaStoChatButton{display:none;margin-top:8px;width:100%;min-height:54px;font-size:17px;font-weight:800}
+      #mamaStoChatButton{display:none;margin-top:8px;width:auto;min-width:150px;max-width:190px;min-height:42px;padding:8px 14px;font-size:14px;font-weight:800}#mamaStoChatButton.mama-sto-unread{background:#facc15!important;color:#111827!important;box-shadow:0 0 0 3px rgba(250,204,21,.28)}.mama-sto-chat-badge{display:inline-flex;align-items:center;justify-content:center;min-width:20px;height:20px;padding:0 6px;margin-left:5px;border-radius:999px;background:#dc2626;color:#fff;font-size:12px;font-weight:900}
       .mama-sto-chat-bg{position:fixed;inset:0;background:rgba(15,23,42,.55);display:none;align-items:center;justify-content:center;z-index:100000;padding:16px;box-sizing:border-box}
       .mama-sto-chat-bg.open{display:flex}
       .mama-sto-chat{width:min(620px,100%);max-height:min(760px,92vh);background:#fff;border-radius:18px;box-shadow:0 18px 50px rgba(0,0,0,.25);display:flex;flex-direction:column;overflow:hidden}
