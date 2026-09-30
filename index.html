@@ -376,7 +376,7 @@ $('logoutBtn').onclick=async()=>{
 $('addBtn').onclick=()=>openModal();$('closeModal').onclick=closeModal;$('cancelBtn').onclick=closeModal;
 let richSavedRange=null;
 let richFontLevel=0;
-function saveRichSelection(){const s=window.getSelection();if(s&&s.rangeCount&&!s.isCollapsed&&$('taskEditor').contains(s.anchorNode)&&$('taskEditor').contains(s.focusNode))richSavedRange=s.getRangeAt(0).cloneRange()}
+function saveRichSelection(){const s=window.getSelection();if(s&&s.rangeCount&&$('taskEditor').contains(s.anchorNode)&&$('taskEditor').contains(s.focusNode))richSavedRange=s.getRangeAt(0).cloneRange()}
 function restoreRichSelection(){const e=$('taskEditor');e.focus();if(richSavedRange){const s=window.getSelection();s.removeAllRanges();s.addRange(richSavedRange)}updateRichToggleState()}
 function closeRichMenus(except=null){document.querySelectorAll('.rich-tool').forEach(x=>{if(x!==except)x.classList.remove('open')})}
 document.querySelectorAll('.rich-tool>button').forEach(btn=>btn.addEventListener('pointerdown',e=>{e.preventDefault();const tool=btn.parentElement;closeRichMenus(tool);tool.classList.toggle('open')}));
@@ -397,6 +397,8 @@ $('richToolbar').addEventListener('click',e=>{
   else{const a=b.dataset.richAction;if(a==='bold'||a==='italic'||a==='underline')document.execCommand(a,false);else{richFontLevel=Math.max(-2,Math.min(3,richFontLevel+(a==='font-up'?1:-1)));const sizes=['2','3','4','5','6','7'];document.execCommand('fontSize',false,sizes[richFontLevel+2])}}
   syncTaskEditor();updateRichToggleState();closeRichMenus();
 });
+document.addEventListener('selectionchange',()=>{const s=window.getSelection();if(s&&s.rangeCount&&$('taskEditor').contains(s.anchorNode)&&$('taskEditor').contains(s.focusNode))saveRichSelection();});
+$('taskEditor').addEventListener('selectstart',saveRichSelection);
 $('taskEditor').addEventListener('input',syncTaskEditor);
 $('taskEditor').addEventListener('mouseup',saveRichSelection);
 $('taskEditor').addEventListener('keyup',saveRichSelection);
