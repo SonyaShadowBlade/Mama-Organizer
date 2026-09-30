@@ -35,7 +35,7 @@
   }
 
   async function request(action=null,extra={}){
-    const token=getToken(),o={headers:{Authorization:"Bearer "+token}};
+    const token=await getToken(),o={headers:{Authorization:"Bearer "+token}};
     if(action){o.method="POST";o.headers["Content-Type"]="application/json";o.body=JSON.stringify({action,...extra})}
     const r=await fetch(FUNCTION_URL,o),d=await r.json().catch(()=>({}));
     if(!r.ok)throw new Error(d.error||"Ошибка чата");return d;
