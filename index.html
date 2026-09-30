@@ -405,7 +405,7 @@ $('taskEditor').addEventListener('mouseup',saveRichSelection);
 $('taskEditor').addEventListener('keyup',saveRichSelection);
 $('taskEditor').addEventListener('touchend',()=>setTimeout(saveRichSelection,0));
 $('taskEditor').addEventListener('blur',()=>setTimeout(()=>closeRichMenus(),180));
-$('taskEditor').addEventListener('contextmenu',e=>e.preventDefault());
+// Оставляем системное контекстное меню телефона: Копировать / Вставить / Выбрать и т.д.
 
 $('modal').addEventListener('click',e=>{if(e.target===$('modal'))closeModal()});
 $('taskForm').addEventListener('submit',saveTask);
