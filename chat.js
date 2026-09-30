@@ -22,15 +22,16 @@
     `;document.head.appendChild(s);
   }
 
-  function getToken(){
-    const ref=isMama?"lhfzvwlbnfvictowzvmp":"lurjmjgtqogwlxkyauso";
-    for(const store of [localStorage,sessionStorage]){
-      for(let i=0;i<store.length;i++){
-        const k=store.key(i);if(!k||!k.includes(ref))continue;
-        try{const v=JSON.parse(store.getItem(k)||"null");if(v?.access_token)return v.access_token}catch(_){}
-      }
+  let authClient=null;
+  async function getToken(){
+    if(!authClient){
+      const url=isMama?"https://lhfzvwlbnfvictowzvmp.supabase.co":"https://lurjmjgtqogwlxkyauso.supabase.co";
+      const key=isMama?"sb_publishable_xnF9H_s77aMohEhxmBA_PQ_t8ggXhl0":"sb_publishable_CwQfxteL0l2-xO7UiclS6g_kJ7IcBvk";
+      authClient=window.supabase.createClient(url,key);
     }
-    throw new Error("Сессия не найдена. Войдите в приложение.");
+    const {data,error}=await authClient.auth.getSession();
+    if(error||!data.session?.access_token)throw new Error("Сессия не найдена. Войдите в приложение.");
+    return data.session.access_token;
   }
 
   async function request(action=null,extra={}){
