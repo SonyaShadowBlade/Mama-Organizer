@@ -22,16 +22,14 @@
     `;document.head.appendChild(s);
   }
 
-  let authClient=null;
   async function getToken(){
-    if(!authClient){
-      const url=isMama?"https://lhfzvwlbnfvictowzvmp.supabase.co":"https://lurjmjgtqogwlxkyauso.supabase.co";
-      const key=isMama?"sb_publishable_xnF9H_s77aMohEhxmBA_PQ_t8ggXhl0":"sb_publishable_CwQfxteL0l2-xO7UiclS6g_kJ7IcBvk";
-      authClient=window.supabase.createClient(url,key);
+    // Используем тот же Supabase-клиент, что и основной Mama Organizer.
+    // Иначе отдельный клиент хранит сессию в другом storage и чат получает "Сессия не найдена".
+    if(typeof sb!=="undefined" && sb?.auth){
+      const {data,error}=await sb.auth.getSession();
+      if(!error && data.session?.access_token)return data.session.access_token;
     }
-    const {data,error}=await authClient.auth.getSession();
-    if(error||!data.session?.access_token)throw new Error("Сессия не найдена. Войдите в приложение.");
-    return data.session.access_token;
+    throw new Error("Сессия не найдена. Войдите в приложение.");
   }
 
   async function request(action=null,extra={}){
