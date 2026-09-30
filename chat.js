@@ -78,7 +78,7 @@
       const unread=messages.filter(m=>m.recipient_role===role&&!m.read_at&&!m.deleted_at).length;setUnread(unread);
       if(markRead&&unread){await request("read");messages=messages.map(m=>m.recipient_role===role&&!m.read_at?({...m,read_at:new Date().toISOString(),delivered_at:m.delivered_at||new Date().toISOString()}):m);setUnread(0)}
       if(opened)render();
-    }catch(e){const b=document.getElementById("mamaStoChatButton");if(b)b.style.setProperty("display","none","important");if(opened)setStatus(e.message)}
+    }catch(e){const b=document.getElementById("mamaStoChatButton");if(b&&isMama)b.style.setProperty("display","inline-flex","important");if(opened)setStatus(e.message)}
   }
 
   function setStatus(v){const e=document.getElementById("mamaStoChatStatus");if(e)e.textContent=v||""}
