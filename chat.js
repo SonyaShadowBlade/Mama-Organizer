@@ -23,9 +23,11 @@
   }
 
   async function getToken(){
-    // Используем тот же Supabase-клиент, что и основной Mama Organizer.
-    // Иначе отдельный клиент хранит сессию в другом storage и чат получает "Сессия не найдена".
+    // Сначала подтверждаем текущего пользователя через Auth-сервер.
+    // Это важно на телефонах, где локальная сессия может быть устаревшей.
     if(typeof sb!=="undefined" && sb?.auth){
+      const {data:userData,error:userError}=await sb.auth.getUser();
+      if(userError || !userData?.user) throw new Error("Сессия не найдена. Войдите в приложение.");
       const {data,error}=await sb.auth.getSession();
       if(!error && data.session?.access_token)return data.session.access_token;
     }
