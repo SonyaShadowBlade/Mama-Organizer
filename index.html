@@ -425,11 +425,7 @@ sb.auth.onAuthStateChange((_event,s)=>{
   const {data}=await sb.auth.getSession();
   session=data.session;
   if(session){
-    if(localStorage.getItem(REMEMBER_KEY)==='1'){
-      startRealtime();show('auth',false);show('app',true);$('userLine').textContent=session.user.email||'';await loadTasks();
-    }else{
-      await sb.auth.signOut();
-    }
+    startRealtime();show('auth',false);show('app',true);$('userLine').textContent=session.user.email||'';await loadTasks();
   }
 })();
 </script>
