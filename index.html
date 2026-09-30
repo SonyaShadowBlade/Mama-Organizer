@@ -151,7 +151,7 @@ input:focus,textarea:focus{border-color:#667eea;box-shadow:0 0 0 3px #667eea18}t
 </div>
 
 <script>
-const APP_VERSION = "0.1.10";
+const APP_VERSION = "0.1.11";
 history.replaceState({appBase:true},'',window.location.pathname);history.pushState({appRoot:true},'',window.location.pathname);
 function showVersionCheck(text, success=false){const bg=$("versionCheckBg"),textEl=$("versionCheckText"),spinner=$("versionCheckSpinner");if(!bg||!textEl||!spinner)return;bg.style.display="flex";textEl.textContent=text;spinner.style.display=success?"none":"block"}
 function closeVersionCheck(){const bg=$("versionCheckBg");if(bg)bg.style.display="none"}
