@@ -50,13 +50,16 @@ input:focus,textarea:focus{border-color:#667eea;box-shadow:0 0 0 3px #667eea18}t
 #pushPermissionBtn{width:100%;padding:9px 10px;font-size:13px;margin-top:5px}.push-status{font-size:11px;margin-top:4px}
 .field{gap:5px;margin:10px 0}.field label{font-size:13px}input,textarea{padding:10px 11px}.modal-actions{gap:6px;margin-top:10px}.modal-actions .btn{padding:10px 11px}
 .wrap{padding:8px}.top{top:4px}.actions .btn{min-width:0}
-    /* Mobile notification/task modal: keep it compact and within the viewport. */
-    .modal{width:100%;box-sizing:border-box}
-    .modal-card{width:min(100%,420px);box-sizing:border-box}
-    .modal-card *{box-sizing:border-box;max-width:100%}
-    .modal-card input,.modal-card select,.modal-card textarea,.modal-card button{max-width:100%}
-    .modal-card .notification-control,.modal-card .deadline-control{width:100%;min-width:0}
-    .modal-card .notification-row,.modal-card .notification-custom{min-width:0}
+    /* Mobile task/notification modal: fixed compact width with safe side margins. */
+    .modal{width:100%;padding:0 12px;box-sizing:border-box;align-items:flex-end}
+    #modal .modal-card{width:calc(100vw - 24px)!important;max-width:380px!important;box-sizing:border-box;margin:0 auto;padding:12px}
+    #modal .modal-card *{box-sizing:border-box;max-width:100%}
+    #modal .modal-card .notification-control,
+    #modal .modal-card .deadline-control{width:100%;min-width:0}
+    #modal .modal-card .notification-row,
+    #modal .modal-card .notification-custom{min-width:0}
+    #modal .modal-card .notification-select{min-width:0;flex:1}
+    #modal .modal-card .notification-custom{grid-template-columns:20px minmax(0,1fr) 42px}
 
 }.wrap{padding:10px}.top{top:6px}.title{font-size:22px}.actions .btn{min-width:0}.auth-card{margin:6vh 10px;padding:22px}}
   .card-deadlines{margin-top:8px;display:grid;gap:4px;font-size:13px}.card-deadline-row{display:grid;grid-template-columns:105px 1fr;gap:8px;align-items:center}.card-deadline-label{font-weight:800;color:#6b7280}.card-deadline-value{font-weight:700;color:#374151}.task.urgent .card-deadline-value{color:#8a5700}.task.terminate .card-deadline-value{color:#fff}
