@@ -14,7 +14,7 @@ button,input,textarea{font:inherit}button{cursor:pointer;border:0}
 .auth-card,.top,.task,.modal-card{background:#fff;border:1px solid #e3e7ee;border-radius:18px;box-shadow:0 8px 28px #1118270d}
 .auth-card{max-width:430px;margin:10vh auto;padding:28px}.logo{font-size:28px;font-weight:800;margin-bottom:8px}
 .muted{color:#687386}.field{display:grid;gap:7px;margin:14px 0}.field label{font-weight:650;font-size:14px}
-input,textarea{width:100%;border:1px solid #d5dbe5;border-radius:12px;padding:12px 13px;background:#fff;outline:none}
+input,textarea{width:100%;border:1px solid #d5dbe5;border-radius:12px;padding:12px 13px;background:#fff;outline:none}.rich-editor{min-height:90px;border:1px solid #d5dbe5;border-radius:12px;padding:12px 13px;background:#fff;outline:none;white-space:pre-wrap;overflow-wrap:anywhere}.rich-editor:empty:before{content:attr(data-placeholder);color:#9aa4b2}.rich-toolbar{position:fixed;z-index:60;display:flex;gap:6px;padding:7px;background:#172033;border-radius:12px;box-shadow:0 8px 28px #11182733}.rich-toolbar.hidden{display:none!important}.rich-toolbar button{background:#fff;color:#172033;border-radius:8px;padding:7px 9px;font-weight:800}.rich-menu{position:relative}.rich-menu-panel{position:absolute;left:0;bottom:calc(100% + 7px);display:none;gap:5px;padding:6px;background:#fff;border-radius:10px;box-shadow:0 8px 28px #11182733}.rich-menu.open .rich-menu-panel{display:flex}.rich-color{width:30px;height:30px;padding:2px}
 input:focus,textarea:focus{border-color:#667eea;box-shadow:0 0 0 3px #667eea18}textarea{min-height:90px;resize:vertical}
 .password-wrap{position:relative}.password-wrap input{padding-right:48px}.password-eye{position:absolute;right:6px;top:50%;transform:translateY(-50%);width:38px;height:38px;border-radius:9px;background:transparent;color:#687386;font-size:18px;padding:0}.password-eye:hover{background:#eef1f5}
 .btn{border-radius:12px;padding:12px 16px;font-weight:700}
@@ -126,14 +126,14 @@ input:focus,textarea:focus{border-color:#667eea;box-shadow:0 0 0 3px #667eea18}t
   </div>
 </section>
 
-<div id="modal" class="modal hidden">
+<div id="richToolbar" class="rich-toolbar hidden"><div class="rich-menu"><button type="button">Шрифт</button><div class="rich-menu-panel"><button type="button" data-rich-action="font-down">A−</button><button type="button" data-rich-action="font-up">A＋</button></div></div><div class="rich-menu"><button type="button">Выделить</button><div class="rich-menu-panel"><button type="button" data-rich-action="bold"><b>Ж</b></button><button type="button" data-rich-action="italic"><i>К</i></button><button type="button" data-rich-action="underline"><u>Ч</u></button></div></div><div class="rich-menu"><button type="button">Цвет</button><div class="rich-menu-panel"><input id="richColor" class="rich-color" type="color" value="#facc15"></div></div></div><div id="modal" class="modal hidden">
   <div class="modal-card">
     <div class="modal-head"><div class="modal-head-left"><div id="modalTitle" class="modal-title">Новая задача</div><div class="urgency-control"><label for="urgency">Срочность:</label><select id="urgency"><option value="Посредственно">Посредственно</option><option value="срочно">Срочно</option><option value="TERMINATE">TERMINATE</option></select></div></div><button id="closeModal" class="icon" type="button">×</button></div>
     <form id="taskForm"><div class="deadline-control"><label for="deadlineDay">DEADLINE</label><select id="deadlineDay" aria-label="День"></select><select id="deadlineMonth" aria-label="Месяц"></select><select id="deadlineYear" aria-label="Год"></select><select id="deadlineTime" aria-label="Время"></select></div>
       <div class="notification-control"><div class="notification-title">УВЕДОМЛЕНИЯ</div><div class="notification-row"><input id="notifyEnabled" type="checkbox" onchange="ensurePushPermission()"><label for="notifyEnabled">Уведомлять каждые:</label><select id="notifyInterval" class="notification-select"><option value="1440">24 часа</option><option value="720">12 часов</option><option value="360">6 часов</option><option value="180">3 часа</option><option value="120">2 часа</option><option value="60">1 час</option><option value="30">30 минут</option><option value="15">15 минут</option><option value="10">10 минут</option><option value="5">5 минут</option><option value="1">1 минута</option></select></div><div class="notification-row"><input id="notifyCustomEnabled" type="checkbox"><label for="notifyCustomEnabled">Свой интервал:</label><input id="notifyCustom" type="number" min="1" step="1" placeholder="минут"><span>мин</span></div><button id="pushPermissionBtn" type="button" class="btn secondary" onclick="ensurePushPermission()">Разрешить уведомления на этом телефоне</button><div id="pushStatus" class="push-status"></div></div>
       <input id="taskId" type="hidden">
       <div class="field"><label for="student">Имя ученика</label><textarea id="student" rows="2" placeholder="Имя и фамилия"></textarea></div>
-      <div class="field"><label for="task">Задача</label><textarea id="task" rows="2" required placeholder="Например: проверить контрольную"></textarea></div>
+      <div class="field"><label for="task">Задача</label><div id="taskEditor" class="rich-editor" contenteditable="true" data-placeholder="Например: проверить контрольную"></div><textarea id="task" class="hidden" tabindex="-1" aria-hidden="true"></textarea></div>
       <div class="field"><label for="className">Класс</label><textarea id="className" rows="2" placeholder="Например: 7А"></textarea></div>
       <div class="field"><label for="notes">Примечание</label><textarea id="notes" placeholder="Дополнительная информация"></textarea></div>
       <div class="modal-actions"><button class="btn secondary" id="cancelBtn" type="button">Отмена</button><button class="btn primary" type="submit">Сохранить</button></div>
@@ -220,7 +220,7 @@ async function loadTasks(){
   if(error){setStatus('Не удалось загрузить задачи: '+error.message);return}
   tasks=data||[];tasks.sort((a,b)=>{const p={TERMINATE:0,'срочно':1,'Посредственно':2};return (p[a.urgency]??2)-(p[b.urgency]??2)||new Date(b.created_at)-new Date(a.created_at)});render();
 }
-function formatDeadline(value){const d=new Date(value);if(Number.isNaN(d.getTime()))return '—';return d.toLocaleDateString('ru-RU',{day:'2-digit',month:'2-digit',year:'numeric'})+' '+d.toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'});}
+function sanitizeTaskHtml(value=''){const box=document.createElement('div');box.innerHTML=String(value||'');box.querySelectorAll('script,style,iframe,object,embed,link,meta').forEach(el=>el.remove());box.querySelectorAll('*').forEach(el=>{[...el.attributes].forEach(a=>{const n=a.name.toLowerCase(),v=a.value||'';if(n.startsWith('on')||n==='id'||n==='class'||n==='contenteditable')el.removeAttribute(a.name);else if(n==='style'&&!/^(font-weight|font-style|text-decoration|font-size|background-color|color)\s*:/i.test(v))el.removeAttribute(a.name)})});return box.innerHTML||String(value||'')}function syncTaskEditor(){$('task').value=$('taskEditor').innerHTML.trim()}function formatDeadline(value){const d=new Date(value);if(Number.isNaN(d.getTime()))return '—';return d.toLocaleDateString('ru-RU',{day:'2-digit',month:'2-digit',year:'numeric'})+' '+d.toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'});}
 function timeToBoom(value){const ms=new Date(value).getTime()-Date.now();if(ms<=0)return '00 ч 00 мин 00 сек';const total=Math.floor(ms/1000),h=Math.floor(total/3600),m=Math.floor((total%3600)/60),s=total%60;return String(h).padStart(2,'0')+' ч '+String(m).padStart(2,'0')+' мин '+String(s).padStart(2,'0')+' сек';}
 function updateDeadlineTimers(){document.querySelectorAll('[data-timer-id]').forEach(el=>{const t=tasks.find(x=>x.id===el.dataset.timerId);if(t?.deadline)el.textContent=timeToBoom(t.deadline);});}
 setInterval(updateDeadlineTimers,1000);
@@ -246,7 +246,7 @@ function render(){
         <input class="check" type="checkbox" ${t.completed?'checked':''} onchange="toggleTask('${t.id}',this.checked)" aria-label="Выполнено">
         <div class="task-main">
           <div class="task-name">${esc(t.student_name)}</div>
-          <div class="meta">${esc(t.task)}${t.class_name?' · '+esc(t.class_name):''}</div>
+          <div class="meta">${sanitizeTaskHtml(t.task)}${t.class_name?' · '+esc(t.class_name):''}</div>
           ${t.notes?'<div class="notes">'+esc(t.notes)+'</div>':''}
           ${t.deadline?'<div class="card-deadlines"><div class="card-deadline-row"><span class="card-deadline-label">DEADLINE</span><span class="card-deadline-value">'+formatDeadline(t.deadline)+'</span></div><div class="card-deadline-row"><span class="card-deadline-label">TimeToBOOM</span><span class="card-deadline-value" data-timer-id="'+t.id+'">'+timeToBoom(t.deadline)+'</span></div></div>':''}
           <div class="task-actions"><button class="btn secondary" onclick="editTask('${t.id}')">Изменить</button><button class="btn danger" onclick="deleteTask('${t.id}')">Удалить</button></div>
@@ -306,13 +306,13 @@ async function ensurePushPermission(){if(!$('notifyEnabled').checked)return true
 function openModal(t=null){
   if(!modalHistoryOpen){history.pushState({modal:true},'',window.location.pathname+'#edit');modalHistoryOpen=true}
   fillDeadlineOptions();
-  $('taskId').value=t?.id||'';$('task').value=t?.task||'';$('student').value=t?.student_name||'';$('className').value=t?.class_name||'';$('notes').value=t?.notes||'';$('urgency').value=t?.urgency||'Посредственно';
+  $('taskId').value=t?.id||'';$('task').value=t?.task||'';$('taskEditor').innerHTML=sanitizeTaskHtml(t?.task||'');$('student').value=t?.student_name||'';$('className').value=t?.class_name||'';$('notes').value=t?.notes||'';$('urgency').value=t?.urgency||'Посредственно';
   setDeadlineValue(t?.deadline||null);setNotificationOptions(t?.notification_enabled,t?.notification_offsets||[]);
   $('modalTitle').textContent=t?'Изменить задачу':'Новая задача';$('formError').textContent='';show('modal',true);setTimeout(()=>$('task').focus(),50);
 }
 function closeModal(){show('modal',false);modalHistoryOpen=false;history.replaceState(null,'',window.location.pathname)}
 async function saveTask(e){
-  e.preventDefault();$('formError').textContent='';
+  e.preventDefault();syncTaskEditor();$('formError').textContent='';
   const offsets=getNotificationOffsets();const notifyEnabled=$('notifyEnabled').checked&&offsets.length>0;
   const payload={task:$('task').value.trim(),student_name:$('student').value.trim(),class_name:$('className').value.trim(),notes:$('notes').value.trim(),urgency:$('urgency').value,deadline:getDeadlineValue(),notification_enabled:notifyEnabled,notification_offsets:offsets,updated_at:new Date().toISOString()};
   if(!payload.task){$('formError').textContent='Введите задачу.';return}
@@ -374,6 +374,16 @@ $('logoutBtn').onclick=async()=>{
   session=null;stopRealtime();show('app',false);show('auth',true);
 };
 $('addBtn').onclick=()=>openModal();$('closeModal').onclick=closeModal;$('cancelBtn').onclick=closeModal;
+let richSavedRange=null;
+function saveRichSelection(){const s=window.getSelection();if(s&&s.rangeCount&&$('taskEditor').contains(s.anchorNode)&&$('taskEditor').contains(s.focusNode))richSavedRange=s.getRangeAt(0).cloneRange()}
+function restoreRichSelection(){const e=$('taskEditor');e.focus();if(richSavedRange){const s=window.getSelection();s.removeAllRanges();s.addRange(richSavedRange)}}
+function positionRichToolbar(){const s=window.getSelection(),e=$('taskEditor');if(!s||!s.rangeCount||s.isCollapsed||!e.contains(s.anchorNode)||!e.contains(s.focusNode))return;saveRichSelection();const r=s.getRangeAt(0).getBoundingClientRect(),t=$('richToolbar');t.classList.remove('hidden');t.style.top=Math.max(6,r.top-52)+'px';t.style.left=Math.min(window.innerWidth-t.offsetWidth-6,Math.max(6,r.left))+'px'}
+document.addEventListener('selectionchange',()=>setTimeout(positionRichToolbar,0));$('taskEditor').addEventListener('input',syncTaskEditor);$('taskEditor').addEventListener('mouseup',saveRichSelection);$('taskEditor').addEventListener('keyup',saveRichSelection);
+$('richToolbar').addEventListener('mousedown',e=>e.preventDefault());
+$('richToolbar').addEventListener('click',e=>{const menu=e.target.closest('.rich-menu');if(e.target.closest('.rich-menu>button')){document.querySelectorAll('.rich-menu').forEach(x=>{if(x!==menu)x.classList.remove('open')});menu.classList.toggle('open');return}const b=e.target.closest('[data-rich-action]');if(!b)return;restoreRichSelection();document.execCommand('styleWithCSS',false,true);const a=b.dataset.richAction;if(a==='bold'||a==='italic'||a==='underline')document.execCommand(a,false);else document.execCommand('fontSize',false,a==='font-up'?'5':'3');syncTaskEditor();menu.classList.remove('open');});
+$('richColor').addEventListener('input',e=>{restoreRichSelection();document.execCommand('styleWithCSS',false,true);document.execCommand('hiliteColor',false,e.target.value);syncTaskEditor()});
+$('taskEditor').addEventListener('blur',()=>setTimeout(()=>{$('richToolbar').classList.add('hidden');document.querySelectorAll('.rich-menu').forEach(x=>x.classList.remove('open'))},180));
+
 $('modal').addEventListener('click',e=>{if(e.target===$('modal'))closeModal()});
 $('taskForm').addEventListener('submit',saveTask);
 $('studentFilter').onchange=render;$('classFilter').onchange=render;
