@@ -27,6 +27,16 @@ input:focus,textarea:focus{border-color:#667eea;box-shadow:0 0 0 3px #667eea18}t
 .actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}.actions .btn{flex:1;min-width:140px}
 .sorts{display:flex;gap:8px;margin-top:10px;overflow:auto;padding-bottom:2px}.sort{white-space:nowrap}
 .sort.active{background:#dfe5ff;color:#273b9b}.filter-select{flex:1;min-width:0;appearance:auto}
+.deadline-visibility-toggle{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:10px;padding:9px 11px;border:1px solid #e3e7ee;border-radius:12px;background:#f8fafc;color:#4b5563;font-size:13px;font-weight:750;cursor:pointer;user-select:none}
+.deadline-visibility-toggle input{position:absolute;opacity:0;pointer-events:none;width:1px;height:1px}
+.toggle-track{position:relative;display:inline-flex;align-items:center;width:44px;height:24px;flex:0 0 44px;border-radius:999px;background:#cbd5e1;transition:.18s}
+.toggle-thumb{width:18px;height:18px;margin-left:3px;border-radius:50%;background:#fff;box-shadow:0 1px 4px #11182733;transition:.18s}
+.deadline-visibility-toggle input:checked + .toggle-track{background:#22c55e}
+.deadline-visibility-toggle input:checked + .toggle-track .toggle-thumb{transform:translateX(20px)}
+.toggle-state{width:24px;text-align:right;font-size:12px;font-weight:900;color:#64748b}
+.deadline-visibility-toggle input:checked ~ .toggle-state{color:#15803d}
+.deadline-visibility-toggle:focus-within{outline:2px solid #667eea44;outline-offset:2px}
+.deadlines-hidden .card-deadlines{display:none!important}
 .status{font-size:14px;color:#687386;margin:12px 2px}
 .list{display:grid;gap:10px}.task{padding:15px;border-left:6px solid #22c55e;cursor:pointer;transition:.15s;position:relative;overflow:hidden}.task.done{border-left-color:#ef4444}.task.done{opacity:.65}.task.urgent{border-left-color:#f59e0b;background:#fffaf0}.task.terminate{border-left-color:#b00000;background:#ff1f1f;color:#fff;box-shadow:0 10px 32px #b000004d;border-color:#b00000}.task.terminate .meta,.task.terminate .notes{color:#fff}.task.terminate .task-actions .secondary{background:#fff;color:#8b0000}.task.terminate::before,.task.terminate::after{content:"";position:absolute;bottom:-10px;width:28px;height:44px;background:#ff6a00;border-radius:60% 40% 55% 45%;opacity:.75;filter:blur(1px);transform:rotate(8deg);animation:flame 1.8s ease-in-out infinite alternate}.task.terminate::before{right:18px}.task.terminate::after{right:52px;height:34px;animation-delay:.5s}@keyframes flame{to{transform:rotate(-8deg) scaleY(1.18);opacity:.65}}.task-head{display:flex;gap:12px;align-items:flex-start}
 .check{width:23px;height:23px;flex:0 0 23px;margin-top:2px;accent-color:#111827}
@@ -104,6 +114,12 @@ input:focus,textarea:focus{border-color:#667eea;box-shadow:0 0 0 3px #667eea18}t
         <select id="studentFilter" class="btn secondary filter-select"><option value="">Все ученики</option></select>
         <select id="classFilter" class="btn secondary filter-select"><option value="">Все классы</option></select>
       </div>
+      <label class="deadline-visibility-toggle" for="deadlineVisibilityToggle">
+        <span>Показывать DEADLINE и TimeToBOOM</span>
+        <input id="deadlineVisibilityToggle" type="checkbox" checked>
+        <span class="toggle-track" aria-hidden="true"><span class="toggle-thumb"></span></span>
+        <span id="deadlineVisibilityState" class="toggle-state">ON</span>
+      </label>
     </header>
     <div id="status" class="status"></div>
     <main id="list" class="list"></main>
@@ -175,6 +191,8 @@ const REMEMBER_KEY = 'mama_organizer_remember';
 const LOGIN_KEY = 'mama_organizer_login';
 
 let session = null, tasks = [], realtimeChannel = null;
+const DEADLINE_VISIBILITY_KEY = 'mama_organizer_deadline_visibility';
+let showCardDeadlines = localStorage.getItem(DEADLINE_VISIBILITY_KEY) !== '0';
 
 function startRealtime(){
   if(realtimeChannel) return;
@@ -207,6 +225,10 @@ function timeToBoom(value){const ms=new Date(value).getTime()-Date.now();if(ms<=
 function updateDeadlineTimers(){document.querySelectorAll('[data-timer-id]').forEach(el=>{const t=tasks.find(x=>x.id===el.dataset.timerId);if(t?.deadline)el.textContent=timeToBoom(t.deadline);});}
 setInterval(updateDeadlineTimers,1000);
 function render(){
+  document.body.classList.toggle('deadlines-hidden',!showCardDeadlines);
+  const toggle=$('deadlineVisibilityToggle'),state=$('deadlineVisibilityState');
+  if(toggle)toggle.checked=showCardDeadlines;
+  if(state)state.textContent=showCardDeadlines?'ON':'OFF';
   let a=[...tasks];
   const students=[...new Set(tasks.map(t=>(t.student_name||'').trim()).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'ru',{sensitivity:'base'}));
   const classes=[...new Set(tasks.map(t=>(t.class_name||'').trim()).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'ru',{numeric:true,sensitivity:'base'}));
@@ -355,6 +377,14 @@ $('addBtn').onclick=()=>openModal();$('closeModal').onclick=closeModal;$('cancel
 $('modal').addEventListener('click',e=>{if(e.target===$('modal'))closeModal()});
 $('taskForm').addEventListener('submit',saveTask);
 $('studentFilter').onchange=render;$('classFilter').onchange=render;
+$('deadlineVisibilityToggle').addEventListener('change',e=>{
+  showCardDeadlines=e.target.checked;
+  localStorage.setItem(DEADLINE_VISIBILITY_KEY,showCardDeadlines?'1':'0');
+  render();
+});
+
+const initialDeadlineToggle=$('deadlineVisibilityToggle');
+if(initialDeadlineToggle)initialDeadlineToggle.checked=showCardDeadlines;
 
 sb.auth.onAuthStateChange((_event,s)=>{
   session=s;
