@@ -14,7 +14,7 @@ button,input,textarea{font:inherit}button{cursor:pointer;border:0}
 .auth-card,.top,.task,.modal-card{background:#fff;border:1px solid #e3e7ee;border-radius:18px;box-shadow:0 8px 28px #1118270d}
 .auth-card{max-width:430px;margin:10vh auto;padding:28px}.logo{font-size:28px;font-weight:800;margin-bottom:8px}
 .muted{color:#687386}.field{display:grid;gap:7px;margin:14px 0}.field label{font-weight:650;font-size:14px}
-input,textarea{width:100%;border:1px solid #d5dbe5;border-radius:12px;padding:12px 13px;background:#fff;outline:none}.rich-editor{min-height:90px;border:1px solid #d5dbe5;border-radius:12px;padding:12px 13px;background:#fff;outline:none;white-space:pre-wrap;overflow-wrap:anywhere}.rich-editor:empty:before{content:attr(data-placeholder);color:#9aa4b2}.rich-tools{display:inline-flex;gap:7px;flex-wrap:wrap;margin-left:8px;vertical-align:middle}.task-label-row{display:flex;align-items:center;gap:0}.rich-tool{position:relative}.rich-tool>button{background:#eef1f5;color:#172033;border:1px solid #d5dbe5;border-radius:9px;padding:7px 11px;font-weight:800}.rich-tool-panel{position:absolute;left:0;top:calc(100% + 5px);z-index:30;display:none;gap:5px;padding:6px;background:#fff;border:1px solid #d5dbe5;border-radius:10px;box-shadow:0 8px 28px #11182722}.rich-tool.open .rich-tool-panel{display:flex}.rich-tool-panel button{min-width:36px;height:34px;border-radius:8px;background:#f3f5f8;color:#172033;font-weight:800}.rich-color-btn{width:24px!important;min-width:24px!important;height:24px!important;padding:0!important;border-radius:50%!important;border:2px solid #fff!important;box-shadow:0 0 0 1px #cbd5e1}.rich-color-btn[data-color="#facc15"]{background:#facc15}.rich-color-btn[data-color="#fb7185"]{background:#fb7185}.rich-color-btn[data-color="#60a5fa"]{background:#60a5fa}.rich-color-btn[data-color="#4ade80"]{background:#4ade80}.rich-color-btn[data-color="#c084fc"]{background:#c084fc}.rich-color-btn[data-color="#f97316"]{background:#f97316}
+input,textarea{width:100%;border:1px solid #d5dbe5;border-radius:12px;padding:12px 13px;background:#fff;outline:none}.rich-editor{min-height:90px;border:1px solid #d5dbe5;border-radius:12px;padding:12px 13px;background:#fff;outline:none;white-space:pre-wrap;overflow-wrap:anywhere}.rich-editor:empty:before{content:attr(data-placeholder);color:#9aa4b2}.rich-tools{display:inline-flex;gap:7px;flex-wrap:wrap;margin-left:8px;vertical-align:middle}.task-label-row{display:flex;align-items:center;gap:0}.rich-tool{position:relative}.rich-tool>button{background:#eef1f5;color:#172033;border:1px solid #d5dbe5;border-radius:9px;padding:7px 11px;font-weight:800}.rich-tool-panel{position:absolute;left:0;top:calc(100% + 5px);z-index:30;display:none;gap:5px;padding:6px;background:#fff;border:1px solid #d5dbe5;border-radius:10px;box-shadow:0 8px 28px #11182722}.rich-tool.open .rich-tool-panel{display:flex}.rich-tool-panel button{min-width:36px;height:34px;border-radius:8px;background:#f3f5f8;color:#172033;font-weight:800}.rich-tool-panel button.rich-active{background:#dfe5ff;color:#273b9b;box-shadow:inset 0 0 0 2px #667eea66}.rich-color-btn{width:24px!important;min-width:24px!important;height:24px!important;padding:0!important;border-radius:50%!important;border:2px solid #fff!important;box-shadow:0 0 0 1px #cbd5e1}.rich-color-btn[data-color="#facc15"]{background:#facc15}.rich-color-btn[data-color="#fb7185"]{background:#fb7185}.rich-color-btn[data-color="#60a5fa"]{background:#60a5fa}.rich-color-btn[data-color="#4ade80"]{background:#4ade80}.rich-color-btn[data-color="#c084fc"]{background:#c084fc}.rich-color-btn[data-color="#f97316"]{background:#f97316}
 input:focus,textarea:focus{border-color:#667eea;box-shadow:0 0 0 3px #667eea18}textarea{min-height:90px;resize:vertical}
 .password-wrap{position:relative}.password-wrap input{padding-right:48px}.password-eye{position:absolute;right:6px;top:50%;transform:translateY(-50%);width:38px;height:38px;border-radius:9px;background:transparent;color:#687386;font-size:18px;padding:0}.password-eye:hover{background:#eef1f5}
 .btn{border-radius:12px;padding:12px 16px;font-weight:700}
@@ -377,17 +377,25 @@ $('addBtn').onclick=()=>openModal();$('closeModal').onclick=closeModal;$('cancel
 let richSavedRange=null;
 let richFontLevel=0;
 function saveRichSelection(){const s=window.getSelection();if(s&&s.rangeCount&&!s.isCollapsed&&$('taskEditor').contains(s.anchorNode)&&$('taskEditor').contains(s.focusNode))richSavedRange=s.getRangeAt(0).cloneRange()}
-function restoreRichSelection(){const e=$('taskEditor');e.focus();if(richSavedRange){const s=window.getSelection();s.removeAllRanges();s.addRange(richSavedRange)}}
+function restoreRichSelection(){const e=$('taskEditor');e.focus();if(richSavedRange){const s=window.getSelection();s.removeAllRanges();s.addRange(richSavedRange)}updateRichToggleState()}
 function closeRichMenus(except=null){document.querySelectorAll('.rich-tool').forEach(x=>{if(x!==except)x.classList.remove('open')})}
 document.querySelectorAll('.rich-tool>button').forEach(btn=>btn.addEventListener('pointerdown',e=>{e.preventDefault();const tool=btn.parentElement;closeRichMenus(tool);tool.classList.toggle('open')}));
 $('richToolbar').addEventListener('pointerdown',e=>{if(e.target.closest('button'))e.preventDefault()});
+function updateRichToggleState(){
+  document.querySelectorAll('[data-rich-action="bold"],[data-rich-action="italic"],[data-rich-action="underline"]').forEach(btn=>{
+    const cmd=btn.dataset.richAction;
+    const active=document.queryCommandState(cmd);
+    btn.classList.toggle('rich-active',active===true);
+    btn.setAttribute('aria-pressed',active===true?'true':'false');
+  });
+}
 $('richToolbar').addEventListener('click',e=>{
   const b=e.target.closest('[data-rich-action]'),color=e.target.closest('[data-color]');
   if(!b&&!color)return;
   restoreRichSelection();document.execCommand('styleWithCSS',false,true);
   if(color)document.execCommand('hiliteColor',false,color.dataset.color);
   else{const a=b.dataset.richAction;if(a==='bold'||a==='italic'||a==='underline')document.execCommand(a,false);else{richFontLevel=Math.max(-2,Math.min(3,richFontLevel+(a==='font-up'?1:-1)));const sizes=['2','3','4','5','6','7'];document.execCommand('fontSize',false,sizes[richFontLevel+2])}}
-  syncTaskEditor();closeRichMenus();
+  syncTaskEditor();updateRichToggleState();closeRichMenus();
 });
 $('taskEditor').addEventListener('input',syncTaskEditor);
 $('taskEditor').addEventListener('mouseup',saveRichSelection);
