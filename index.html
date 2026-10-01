@@ -403,6 +403,7 @@ function positionRichToolbar(){
   if(top+th>window.innerHeight-pad)top=Math.max(pad,rect.top-th-gap);
   toolbar.style.left=left+'px';
   toolbar.style.top=top+'px';
+  toolbar.style.setProperty('--rich-tools-bottom',(top+th)+'px');
 }
 function updateRichToolbarVisibility(){
   if(richToolbarLocked)return;
