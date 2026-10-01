@@ -72,13 +72,14 @@
     list.querySelectorAll("[data-edit]").forEach(x=>x.onclick=()=>editMessage(x.dataset.edit));list.querySelectorAll("[data-del]").forEach(x=>x.onclick=()=>deleteMessage(x.dataset.del));list.scrollTop=list.scrollHeight;
   }
 
-  async function loadMessages(markRead=opened){
+  function removeButton(){const b=document.getElementById("mamaStoChatButton");if(b)b.remove()}\n\n  async function loadMessages(markRead=opened){
     try{
       const d=await request();role=d.role;messages=d.messages||[];addButton();
       const unread=messages.filter(m=>m.recipient_role===role&&!m.read_at&&!m.deleted_at).length;setUnread(unread);
       if(markRead&&unread){await request("read");messages=messages.map(m=>m.recipient_role===role&&!m.read_at?({...m,read_at:new Date().toISOString(),delivered_at:m.delivered_at||new Date().toISOString()}):m);setUnread(0)}
       if(opened)render();
-    }catch(e){const b=document.getElementById("mamaStoChatButton");if(b&&isMama)b.style.setProperty("display","inline-flex","important");if(opened)setStatus(e.message)}
+      return true;
+    }catch(e){removeButton();if(opened)setStatus(e.message);return false}
   }
 
   function setStatus(v){const e=document.getElementById("mamaStoChatStatus");if(e)e.textContent=v||""}
@@ -96,7 +97,7 @@
   async function openChat(){addModal();document.getElementById("mamaStoChatModal").classList.add("open");opened=true;await loadMessages(true);document.getElementById("mamaStoChatInput")?.focus()}
   function closeChat(){document.getElementById("mamaStoChatModal")?.classList.remove("open");opened=false}
 
-  async function init(){if(!window.supabase)return;css();addButton();addModal();await loadMessages(false);if(timer)clearInterval(timer);timer=setInterval(()=>loadMessages(opened),1500);document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible")loadMessages(opened)})}
+  async function init(){if(!window.supabase)return;css();addModal();await loadMessages(false);if(timer)clearInterval(timer);timer=setInterval(()=>loadMessages(opened),1500);document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible")loadMessages(opened)})}
   window.mamaStoChat={open:openChat,close:closeChat,refresh:()=>loadMessages(false)};
   setInterval(addButton,1000);
   if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",init,{once:true});else init();
