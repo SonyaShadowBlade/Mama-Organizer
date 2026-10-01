@@ -475,7 +475,10 @@ sb.auth.onAuthStateChange((_event,s)=>{
     startRealtime();
     show('auth',false);show('app',true);
     $('userLine').textContent=s.user.email||'';
-    loadTasks();
+    await loadTasks();
+    // После входа заново проверяем доступ к чату, чтобы кнопка
+    // «Чат с Admin» сразу восстанавливалась без перезагрузки страницы.
+    window.mamaStoChat?.refresh?.();
   }else{
     show('app',false);show('auth',true);
   }
@@ -494,6 +497,6 @@ sb.auth.onAuthStateChange((_event,s)=>{
   }
 })();
 </script>
-<script src="./chat.js?v=20261001-5"></script>
+<script src="./chat.js?v=20261001-6"></script>
 </body>
 </html>
