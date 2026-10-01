@@ -72,7 +72,9 @@
     list.querySelectorAll("[data-edit]").forEach(x=>x.onclick=()=>editMessage(x.dataset.edit));list.querySelectorAll("[data-del]").forEach(x=>x.onclick=()=>deleteMessage(x.dataset.del));list.scrollTop=list.scrollHeight;
   }
 
-  function removeButton(){const b=document.getElementById("mamaStoChatButton");if(b)b.remove()}\n\n  async function loadMessages(markRead=opened){
+  function removeButton(){const b=document.getElementById("mamaStoChatButton");if(b)b.remove()}
+
+  async function loadMessages(markRead=opened){
     try{
       const d=await request();if(d.role!=="mama")throw new Error("Доступ к чату запрещён");role=d.role;messages=d.messages||[];addButton();
       const unread=messages.filter(m=>m.recipient_role===role&&!m.read_at&&!m.deleted_at).length;setUnread(unread);
