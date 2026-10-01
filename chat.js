@@ -99,6 +99,5 @@
 
   async function init(){if(!window.supabase)return;css();addModal();await loadMessages(false);if(timer)clearInterval(timer);timer=setInterval(()=>loadMessages(opened),1500);document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible")loadMessages(opened)})}
   window.mamaStoChat={open:openChat,close:closeChat,refresh:()=>loadMessages(false)};
-  setInterval(addButton,1000);
   if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",init,{once:true});else init();
 })();
