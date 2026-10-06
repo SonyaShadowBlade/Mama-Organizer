@@ -378,7 +378,7 @@ $('loginForm').addEventListener('submit',async e=>{
     $('authError').textContent=error.message;
     return;
   }
-  session=data.session;startRealtime();show('auth',false);show('app',true);$('userLine').textContent=session.user.email||'';await loadTasks();
+  session=data.session;startRealtime();show('auth',false);show('app',true);await loadTasks();
 });
 $('versionBtn').onclick=checkVersionNow;
 $('logoutBtn').onclick=async()=>{
@@ -503,7 +503,7 @@ sb.auth.onAuthStateChange((_event,s)=>{
   session=data.session;
   if(session){
     if(localStorage.getItem(REMEMBER_KEY)==='1'){
-      startRealtime();show('auth',false);show('app',true);$('userLine').textContent=session.user.email||'';await loadTasks();
+      startRealtime();show('auth',false);show('app',true);await loadTasks();
     }else{
       await sb.auth.signOut();
     }
