@@ -134,7 +134,8 @@ input:focus,textarea:focus{border-color:#667eea;box-shadow:0 0 0 3px #667eea18}t
         <select id="studentFilter" class="btn secondary filter-select"><option value="">Все ученики</option></select>
         <select id="classFilter" class="btn secondary filter-select"><option value="">Все классы</option></select>
       </div>
-      <button id="scrollTopBtn" class="btn secondary scroll-top-btn" type="button" aria-label="Вверх" title="Перейти вверх">↑</button>\n      <button id="versionBtn" class="btn secondary" type="button">ℹ️ Проверить версию</button>
+      <button id="scrollTopBtn" class="btn secondary scroll-top-btn" type="button" aria-label="Вверх" title="Перейти вверх">↑</button>
+      <button id="versionBtn" class="btn secondary" type="button">ℹ️ Проверить версию</button>
       <button id="logoutBtn" class="btn secondary" type="button">Выйти</button>
     </div>
   </div>
@@ -475,7 +476,8 @@ window.addEventListener('scroll',positionRichToolbar,true);
 $('modal').addEventListener('click',e=>{if(e.target===$('modal'))closeModal()});
 $('taskForm').addEventListener('submit',saveTask);
 $('studentFilter').onchange=render;$('classFilter').onchange=render;
-$('scrollBottomBtn').addEventListener('click',()=>{window.scrollTo({top:document.documentElement.scrollHeight,behavior:'smooth'});});\n$('scrollTopBtn').addEventListener('click',()=>{window.scrollTo({top:0,behavior:'smooth'});});
+$('scrollBottomBtn').addEventListener('click',()=>{window.scrollTo({top:document.documentElement.scrollHeight,behavior:'smooth'});});
+$('scrollTopBtn').addEventListener('click',()=>{window.scrollTo({top:0,behavior:'smooth'});});
 $('deadlineVisibilityToggle').addEventListener('change',e=>{
   showCardDeadlines=e.target.checked;
   localStorage.setItem(DEADLINE_VISIBILITY_KEY,showCardDeadlines?'1':'0');
