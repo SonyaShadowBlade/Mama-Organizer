@@ -29,7 +29,7 @@ input:focus,textarea:focus{border-color:#667eea;box-shadow:0 0 0 3px #667eea18}t
 .sorts{display:flex;gap:8px;overflow:auto;padding-bottom:2px}.sort{white-space:nowrap}
 .bottom-controls{display:flex;gap:8px;flex-wrap:wrap;margin:16px 0 8px;padding:10px;background:#fff;border:1px solid #e3e7ee;border-radius:14px;box-shadow:0 8px 28px #1118270d}
 .bottom-controls .sorts{flex:1 1 100%;margin:0}
-.bottom-controls .btn{padding:9px 12px;font-size:13px}
+.bottom-controls .btn{padding:9px 12px;font-size:13px}.scroll-top-btn{width:42px;height:42px;padding:0!important;font-size:20px!important;display:inline-flex;align-items:center;justify-content:center}
 .scroll-bottom-btn{width:42px;height:42px;padding:0!important;font-size:20px!important;display:inline-flex;align-items:center;justify-content:center}
 .sort.active{background:#dfe5ff;color:#273b9b}.filter-select{flex:1;min-width:0;appearance:auto}
 .deadline-visibility-toggle{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:10px;padding:9px 11px;border:1px solid #e3e7ee;border-radius:12px;background:#f8fafc;color:#4b5563;font-size:13px;font-weight:750;cursor:pointer;user-select:none}
@@ -134,7 +134,7 @@ input:focus,textarea:focus{border-color:#667eea;box-shadow:0 0 0 3px #667eea18}t
         <select id="studentFilter" class="btn secondary filter-select"><option value="">Все ученики</option></select>
         <select id="classFilter" class="btn secondary filter-select"><option value="">Все классы</option></select>
       </div>
-      <button id="versionBtn" class="btn secondary" type="button">ℹ️ Проверить версию</button>
+      <button id="scrollTopBtn" class="btn secondary scroll-top-btn" type="button" aria-label="Вверх" title="Перейти вверх">↑</button>\n      <button id="versionBtn" class="btn secondary" type="button">ℹ️ Проверить версию</button>
       <button id="logoutBtn" class="btn secondary" type="button">Выйти</button>
     </div>
   </div>
@@ -475,7 +475,7 @@ window.addEventListener('scroll',positionRichToolbar,true);
 $('modal').addEventListener('click',e=>{if(e.target===$('modal'))closeModal()});
 $('taskForm').addEventListener('submit',saveTask);
 $('studentFilter').onchange=render;$('classFilter').onchange=render;
-$('scrollBottomBtn').addEventListener('click',()=>{window.scrollTo({top:document.documentElement.scrollHeight,behavior:'smooth'});});
+$('scrollBottomBtn').addEventListener('click',()=>{window.scrollTo({top:document.documentElement.scrollHeight,behavior:'smooth'});});\n$('scrollTopBtn').addEventListener('click',()=>{window.scrollTo({top:0,behavior:'smooth'});});
 $('deadlineVisibilityToggle').addEventListener('change',e=>{
   showCardDeadlines=e.target.checked;
   localStorage.setItem(DEADLINE_VISIBILITY_KEY,showCardDeadlines?'1':'0');
