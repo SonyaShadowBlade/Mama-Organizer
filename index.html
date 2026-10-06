@@ -21,11 +21,16 @@ input:focus,textarea:focus{border-color:#667eea;box-shadow:0 0 0 3px #667eea18}t
 .version-check-bg{position:fixed;inset:0;background:#11182780;display:none;align-items:center;justify-content:center;z-index:50;padding:20px}.version-check-modal{width:min(430px,100%);background:#fff;border-radius:20px;padding:24px;text-align:center;box-shadow:0 16px 50px #11182733}.version-check-title{font-size:20px;font-weight:800;margin-bottom:12px}.version-check-text{color:#4b5563;line-height:1.45}.version-check-spinner{width:34px;height:34px;border:4px solid #dbe2ea;border-top-color:#111827;border-radius:50%;margin:0 auto 16px;animation:versionSpin .8s linear infinite}@keyframes versionSpin{to{transform:rotate(360deg)}}.primary{background:#111827;color:#fff}.secondary{background:#eef1f5;color:#172033}.danger{background:#fee2e2;color:#991b1b}
 .auth-btn{width:100%;margin-top:8px}.remember{display:flex;align-items:center;gap:9px;margin:12px 0 2px;font-size:14px;color:#4b5563;cursor:pointer;user-select:none}.remember input{width:18px;height:18px;margin:0;accent-color:#111827}
 .error{color:#b42318;font-size:14px;min-height:20px;margin-top:10px}
-.top{padding:16px;margin-bottom:14px;position:sticky;top:10px;z-index:5}
-.topline{display:flex;justify-content:space-between;align-items:center;gap:12px}.title{font-size:24px;font-weight:800}
-.userline{font-size:13px;color:#687386;margin-top:3px;overflow:hidden;text-overflow:ellipsis}
-.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}.actions .btn{flex:1;min-width:140px}
-.sorts{display:flex;gap:8px;margin-top:10px;overflow:auto;padding-bottom:2px}.sort{white-space:nowrap}
+.top{padding:12px;margin-bottom:14px;position:sticky;top:6px;z-index:5}
+.topline{display:flex;justify-content:flex-start;align-items:center;gap:8px}
+.actions{display:flex;gap:7px;flex-wrap:wrap;margin:0}.actions .btn{flex:0 0 auto;min-width:0;padding:9px 12px;font-size:13px}
+.top-compact{display:flex;align-items:center;gap:8px}
+.top-compact .btn{padding:9px 12px;font-size:13px}
+.sorts{display:flex;gap:8px;overflow:auto;padding-bottom:2px}.sort{white-space:nowrap}
+.bottom-controls{display:flex;gap:8px;flex-wrap:wrap;margin:16px 0 8px;padding:10px;background:#fff;border:1px solid #e3e7ee;border-radius:14px;box-shadow:0 8px 28px #1118270d}
+.bottom-controls .sorts{flex:1 1 100%;margin:0}
+.bottom-controls .btn{padding:9px 12px;font-size:13px}
+.scroll-bottom-btn{width:42px;height:42px;padding:0!important;font-size:20px!important;display:inline-flex;align-items:center;justify-content:center}
 .sort.active{background:#dfe5ff;color:#273b9b}.filter-select{flex:1;min-width:0;appearance:auto}
 .deadline-visibility-toggle{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:10px;padding:9px 11px;border:1px solid #e3e7ee;border-radius:12px;background:#f8fafc;color:#4b5563;font-size:13px;font-weight:750;cursor:pointer;user-select:none}
 .deadline-visibility-toggle input{position:absolute;opacity:0;pointer-events:none;width:1px;height:1px}
@@ -109,13 +114,13 @@ input:focus,textarea:focus{border-color:#667eea;box-shadow:0 0 0 3px #667eea18}t
 <section id="app" class="hidden">
   <div class="wrap">
     <header class="top">
-      <div class="topline"><div><div class="title">Задачи</div><div id="userLine" class="userline"></div></div><div style="display:flex;gap:8px;align-items:center"><button id="versionBtn" class="btn secondary" type="button">ℹ️ Проверить версию</button><button id="logoutBtn" class="btn secondary">Выйти</button></div></div>
-      <div class="actions"><button id="addBtn" class="btn primary">＋ Добавить задачу</button></div>
-      <div class="sorts">
-        <select id="studentFilter" class="btn secondary filter-select"><option value="">Все ученики</option></select>
-        <select id="classFilter" class="btn secondary filter-select"><option value="">Все классы</option></select>
+      <div class="topline">
+        <div class="actions">
+          <button id="addBtn" class="btn primary">＋ Добавить задачу</button>
+        </div>
       </div>
       <label class="deadline-visibility-toggle" for="deadlineVisibilityToggle">
+        <button id="scrollBottomBtn" class="btn secondary scroll-bottom-btn" type="button" aria-label="Вниз" title="Перейти вниз">↓</button>
         <span>Показывать DEADLINE и TimeToBOOM</span>
         <input id="deadlineVisibilityToggle" type="checkbox" checked>
         <span class="toggle-track" aria-hidden="true"><span class="toggle-thumb"></span></span>
@@ -124,6 +129,14 @@ input:focus,textarea:focus{border-color:#667eea;box-shadow:0 0 0 3px #667eea18}t
     </header>
     <div id="status" class="status"></div>
     <main id="list" class="list"></main>
+    <div class="bottom-controls">
+      <div class="sorts">
+        <select id="studentFilter" class="btn secondary filter-select"><option value="">Все ученики</option></select>
+        <select id="classFilter" class="btn secondary filter-select"><option value="">Все классы</option></select>
+      </div>
+      <button id="versionBtn" class="btn secondary" type="button">ℹ️ Проверить версию</button>
+      <button id="logoutBtn" class="btn secondary" type="button">Выйти</button>
+    </div>
   </div>
 </section>
 
@@ -462,6 +475,7 @@ window.addEventListener('scroll',positionRichToolbar,true);
 $('modal').addEventListener('click',e=>{if(e.target===$('modal'))closeModal()});
 $('taskForm').addEventListener('submit',saveTask);
 $('studentFilter').onchange=render;$('classFilter').onchange=render;
+$('scrollBottomBtn').addEventListener('click',()=>{window.scrollTo({top:document.documentElement.scrollHeight,behavior:'smooth'});});
 $('deadlineVisibilityToggle').addEventListener('change',e=>{
   showCardDeadlines=e.target.checked;
   localStorage.setItem(DEADLINE_VISIBILITY_KEY,showCardDeadlines?'1':'0');
