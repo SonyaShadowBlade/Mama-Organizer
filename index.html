@@ -111,6 +111,13 @@ input:focus,textarea:focus{border-color:#667eea;box-shadow:0 0 0 3px #667eea18}t
   .card-deadlines{margin-top:8px;display:grid;gap:4px;font-size:13px}.card-deadline-row{display:grid;grid-template-columns:105px 1fr;gap:8px;align-items:center}.card-deadline-label{font-weight:800;color:#6b7280}.card-deadline-value{font-weight:700;color:#374151}.task.urgent .card-deadline-value{color:#8a5700}.task.terminate .card-deadline-value{color:#fff}
 .notification-control{margin:10px 0;padding:10px;border:1px solid #e5e7eb;border-radius:12px;background:#fafafa}.notification-title{font-weight:900;margin-bottom:9px}.notification-row{display:flex;gap:8px;align-items:center;margin:7px 0;font-weight:700}.notification-row input[type=checkbox]{flex:0 0 auto}.notification-select{min-width:145px;padding:7px 9px;border:1px solid #d1d5db;border-radius:8px;background:#fff}.notification-custom input{width:110px;padding:7px 9px;border:1px solid #d1d5db;border-radius:8px}.push-status{margin-top:6px;font-size:12px;color:#6b7280}
 .fold-section{margin:10px 0;border:1px solid #e5e7eb;border-radius:12px;background:#fafafa;overflow:hidden}.fold-toggle{width:100%;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:13px 14px;border:0;background:transparent;color:#243047;font-size:14px;font-weight:900;text-align:left;cursor:pointer}.fold-arrow{font-size:21px;line-height:1;transition:transform .18s ease}.fold-toggle[aria-expanded="true"] .fold-arrow{transform:rotate(180deg)}.fold-content{padding:0 10px 10px}.deadline-section .deadline-control{margin:0;padding:0 10px 10px;grid-template-columns:58px minmax(0,1fr) minmax(0,1fr)}.deadline-section .deadline-control label{display:none}.notification-control .notification-title{margin:0}.notification-control .fold-content{padding-top:2px}.fold-content.hidden{display:none!important}
+/* Compact, equal-height collapsed rows for deadline and notifications. */
+#modal .fold-section{margin:5px 0;padding:0;border:1px solid #e5e7eb;border-radius:10px;background:#fafafa}
+#modal .fold-toggle{height:38px;min-height:38px;padding:0 11px;line-height:1;box-sizing:border-box;font-size:13px}
+#modal .fold-arrow{font-size:18px}
+#modal .notification-control .notification-title{margin:0;font-size:13px}
+#modal .deadline-section .deadline-control{margin:0;padding:0 8px 8px}
+#modal .notification-control .fold-content{padding:0 8px 8px}
 /* Folder actions stay in a tidy right-hand column, including on phones. */
 .folder-heading{gap:6px;align-items:center}
 .folder-heading .folder-heading-name{flex:1;min-width:0;overflow-wrap:anywhere}
