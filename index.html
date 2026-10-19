@@ -133,10 +133,11 @@ input:focus,textarea:focus{border-color:#667eea;box-shadow:0 0 0 3px #667eea18}t
     <header class="top">
       <div class="topline">
         <div class="actions">
-          <button id="addBtn" class="btn primary">＋ Добавить папку</button>
+          <button id="addBtn" class="btn primary">＋ Добавить задачу</button>
         </div>
       </div>
       <div class="folder-toolbar">
+        <button id="folderDropdownBtn" class="btn secondary folder-dropdown-btn" type="button" aria-expanded="false">Добавить Папку</button>
         <button id="folderArrowBtn" class="btn secondary folder-arrow-btn" type="button" aria-label="Плавно перейти вниз страницы" title="Плавно перейти вниз страницы">↓</button>
         <div id="folderDropdown" class="folder-dropdown hidden">
           <form id="folderCreateForm" class="folder-create-form">
@@ -470,10 +471,11 @@ $('logoutBtn').onclick=async()=>{
   localStorage.removeItem(LOGIN_KEY);
   session=null;stopRealtime();show('app',false);show('auth',true);
 };
-$('addBtn').onclick=()=>{toggleFolderDropdown();if(!$('folderDropdown').classList.contains('hidden'))setTimeout(()=>$('folderNameInput').focus(),0);};$('closeModal').onclick=closeModal;$('cancelBtn').onclick=closeModal;
+$('addBtn').onclick=()=>openModal();$('closeModal').onclick=closeModal;$('cancelBtn').onclick=closeModal;
 function toggleFolderDropdown(){
   const panel=$('folderDropdown'),open=panel.classList.contains('hidden');
   panel.classList.toggle('hidden',!open);
+  $('folderDropdownBtn').setAttribute('aria-expanded',open?'true':'false');
   $('folderArrowBtn').setAttribute('aria-expanded',open?'true':'false');
   $('folderArrowBtn').textContent=open?'↑':'↓';
   if(open){$('folderManagerStatus').textContent='';renderFolderManager();}
