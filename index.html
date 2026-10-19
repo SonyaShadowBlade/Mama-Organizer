@@ -47,7 +47,7 @@ input:focus,textarea:focus{border-color:#667eea;box-shadow:0 0 0 3px #667eea18}t
 .folder-manager-status{font-size:13px;color:#b42318;margin-top:7px}
 .folder-section{border:1px solid #dfe5ef;border-radius:15px;padding:10px;background:#eef2f8;display:grid;gap:9px}
 .folder-heading{display:flex;align-items:center;gap:8px;width:100%;text-align:left;background:transparent;color:#26344a;font-size:16px;font-weight:850;padding:4px 3px;overflow-wrap:anywhere}
-.folder-heading .folder-count{margin-left:auto;color:#687386;font-size:12px;font-weight:700}
+.folder-heading .folder-heading-name{min-width:0;overflow-wrap:anywhere}.folder-heading .folder-count{margin-left:auto;color:#687386;font-size:12px;font-weight:700}.folder-action-btn{flex:0 0 auto;padding:6px 8px;font-size:12px;white-space:nowrap}@media(max-width:560px){.folder-heading{flex-wrap:wrap}.folder-heading .folder-count{margin-left:auto}.folder-action-btn{flex:1 1 auto}}
 .folder-task-list{display:grid;gap:9px}
 .folder-empty{font-size:13px;color:#687386;padding:4px 3px}
 .deadline-visibility-toggle input{position:absolute;opacity:0;pointer-events:none;width:1px;height:1px}
@@ -137,14 +137,13 @@ input:focus,textarea:focus{border-color:#667eea;box-shadow:0 0 0 3px #667eea18}t
         </div>
       </div>
       <div class="folder-toolbar">
-        <button id="folderDropdownBtn" class="btn secondary folder-dropdown-btn" type="button" aria-expanded="false">Добавить Папку</button>
         <button id="folderArrowBtn" class="btn secondary folder-arrow-btn" type="button" aria-label="Плавно перейти вниз страницы" title="Плавно перейти вниз страницы">↓</button>
+        <button id="folderDropdownBtn" class="btn secondary folder-dropdown-btn" type="button" aria-expanded="false">Добавить Папку</button>
         <div id="folderDropdown" class="folder-dropdown hidden">
           <form id="folderCreateForm" class="folder-create-form">
             <input id="folderNameInput" type="text" maxlength="100" placeholder="Название новой папки" aria-label="Название новой папки" required>
             <button class="btn primary" type="submit">Создать</button>
           </form>
-          <div id="folderManagerList" class="folder-manager-list"></div>
           <div id="folderManagerStatus" class="folder-manager-status"></div>
         </div>
       </div>
@@ -311,7 +310,7 @@ function render(){
   if(cf.value)a=a.filter(t=>(t.class_name||'').trim()===cf.value);
   const sections=folders.map(folder=>{
     const items=a.filter(t=>t.folder_id===folder.id);
-    return '<section class="folder-section"><div class="folder-heading"><span aria-hidden="true">📁</span><span>'+esc(folder.name)+'</span><span class="folder-count">'+items.length+' задач</span></div><div class="folder-task-list">'+(items.length?items.map(renderTaskCard).join(''):'<div class="folder-empty">В этой папке пока нет задач.</div>')+'</div></section>';
+    return '<section class="folder-section"><div class="folder-heading" data-folder-row="'+esc(folder.id)+'"><span aria-hidden="true">📁</span><span class="folder-heading-name">'+esc(folder.name)+'</span><span class="folder-count">'+items.length+' задач</span><button type="button" class="btn secondary folder-action-btn" onclick="event.stopPropagation();beginFolderRename(\''+folder.id+'\')" aria-label="Редактировать папку '+esc(folder.name)+'">✏️ Редактировать</button><button type="button" class="btn danger folder-action-btn" onclick="event.stopPropagation();deleteFolder(\''+folder.id+'\')" aria-label="Удалить папку '+esc(folder.name)+'">🗑️ Удалить</button></div><div class="folder-task-list">'+(items.length?items.map(renderTaskCard).join(''):'<div class="folder-empty">В этой папке пока нет задач.</div>')+'</div></section>';
   }).join('');
   const unfiled=a.filter(t=>!t.folder_id);
   $('list').innerHTML=sections+(unfiled.length?unfiled.map(renderTaskCard).join(''):'')||'<div class="empty">Папок и задач пока нет.<br>Нажмите «Добавить Папку» или «＋ Добавить задачу».</div>';
@@ -340,15 +339,15 @@ window.beginFolderRename=id=>{
   const row=document.querySelector('[data-folder-row="'+id+'"]');if(!row)return;
   row.innerHTML='<input type="text" maxlength="100" aria-label="Новое название папки" value="'+esc(folder.name)+'"><button type="button" class="btn primary">Сохранить</button><button type="button" class="btn secondary">Отмена</button>';
   const input=row.querySelector('input'),buttons=row.querySelectorAll('button');
-  buttons[0].onclick=async()=>{const name=input.value.trim();if(!name){$('folderManagerStatus').textContent='Введите название папки.';return}const {error}=await sb.from('folders').update({name,updated_at:new Date().toISOString()}).eq('id',id);if(error){$('folderManagerStatus').textContent=error.code==='23505'?'Папка с таким названием уже существует.':error.message;return}$('folderManagerStatus').textContent='';await loadTasks();};
-  buttons[1].onclick=renderFolderManager;
+  buttons[0].onclick=async()=>{const name=input.value.trim();if(!name){$('folderManagerStatus').textContent='Введите название папки.';input.focus();return}const {error}=await sb.from('folders').update({name,updated_at:new Date().toISOString()}).eq('id',id);if(error){$('folderManagerStatus').textContent=error.code==='23505'?'Папка с таким названием уже существует.':error.message;return}$('folderManagerStatus').textContent='';await loadTasks();};
+  buttons[1].onclick=()=>{render();renderFolderManager();};
   input.focus();input.select();
 };
 window.deleteFolder=async id=>{
   const folder=folders.find(f=>f.id===id);if(!folder)return;
   if(!confirm('Удалить папку «'+folder.name+'»? Задачи останутся и будут перемещены в список без папки.'))return;
   const {error}=await sb.from('folders').delete().eq('id',id);
-  if(error){$('folderManagerStatus').textContent='Не удалось удалить папку: '+error.message;return}
+  if(error){$('folderManagerStatus').textContent='Не удалось удалить папку: '+error.message;alert('Не удалось удалить папку: '+error.message);return}
   $('folderManagerStatus').textContent='';await loadTasks();
 };
 
@@ -476,9 +475,7 @@ function toggleFolderDropdown(){
   const panel=$('folderDropdown'),open=panel.classList.contains('hidden');
   panel.classList.toggle('hidden',!open);
   $('folderDropdownBtn').setAttribute('aria-expanded',open?'true':'false');
-  $('folderArrowBtn').setAttribute('aria-expanded',open?'true':'false');
-  $('folderArrowBtn').textContent=open?'↑':'↓';
-  if(open){$('folderManagerStatus').textContent='';renderFolderManager();}
+  if(open){$('folderManagerStatus').textContent='';setTimeout(()=>$('folderNameInput').focus(),0);}
 }
 $('folderDropdownBtn').addEventListener('click',toggleFolderDropdown);
 $('folderArrowBtn').addEventListener('click',()=>{window.scrollTo({top:document.documentElement.scrollHeight,behavior:'smooth'});});
@@ -489,7 +486,7 @@ $('folderCreateForm').addEventListener('submit',async e=>{
   if(error){$('folderManagerStatus').textContent=error.code==='23505'?'Папка с таким названием уже существует.':error.message;return}
   $('folderNameInput').value='';$('folderManagerStatus').textContent='';await loadTasks();$('folderNameInput').focus();
 });
-document.addEventListener('click',e=>{if(!$('folderDropdown').contains(e.target)&&!$('folderDropdownBtn').contains(e.target)&&!$('folderArrowBtn').contains(e.target)){$('folderDropdown').classList.add('hidden');$('folderDropdownBtn').setAttribute('aria-expanded','false');$('folderArrowBtn').setAttribute('aria-expanded','false');$('folderArrowBtn').textContent='↓'}});
+document.addEventListener('click',e=>{if(!$('folderDropdown').contains(e.target)&&!$('folderDropdownBtn').contains(e.target)){$('folderDropdown').classList.add('hidden');$('folderDropdownBtn').setAttribute('aria-expanded','false')}});
 
 let richSavedRange=null;
 let richFontLevel=0;
