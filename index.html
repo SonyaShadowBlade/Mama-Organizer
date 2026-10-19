@@ -109,7 +109,16 @@ input:focus,textarea:focus{border-color:#667eea;box-shadow:0 0 0 3px #667eea18}t
 
 }.wrap{padding:10px}.top{top:6px}.title{font-size:22px}.actions .btn{min-width:0}.auth-card{margin:6vh 10px;padding:22px}}
   .card-deadlines{margin-top:8px;display:grid;gap:4px;font-size:13px}.card-deadline-row{display:grid;grid-template-columns:105px 1fr;gap:8px;align-items:center}.card-deadline-label{font-weight:800;color:#6b7280}.card-deadline-value{font-weight:700;color:#374151}.task.urgent .card-deadline-value{color:#8a5700}.task.terminate .card-deadline-value{color:#fff}
-.notification-control{margin:10px 0;padding:10px;border:1px solid #e5e7eb;border-radius:12px;background:#fafafa}.notification-title{font-weight:900;margin-bottom:9px}.notification-row{display:flex;gap:8px;align-items:center;margin:7px 0;font-weight:700}.notification-row input[type=checkbox]{flex:0 0 auto}.notification-select{min-width:145px;padding:7px 9px;border:1px solid #d1d5db;border-radius:8px;background:#fff}.notification-custom input{width:110px;padding:7px 9px;border:1px solid #d1d5db;border-radius:8px}.push-status{margin-top:6px;font-size:12px;color:#6b7280}</style>
+.notification-control{margin:10px 0;padding:10px;border:1px solid #e5e7eb;border-radius:12px;background:#fafafa}.notification-title{font-weight:900;margin-bottom:9px}.notification-row{display:flex;gap:8px;align-items:center;margin:7px 0;font-weight:700}.notification-row input[type=checkbox]{flex:0 0 auto}.notification-select{min-width:145px;padding:7px 9px;border:1px solid #d1d5db;border-radius:8px;background:#fff}.notification-custom input{width:110px;padding:7px 9px;border:1px solid #d1d5db;border-radius:8px}.push-status{margin-top:6px;font-size:12px;color:#6b7280}
+/* Folder actions stay in a tidy right-hand column, including on phones. */
+.folder-heading{gap:6px;align-items:center}
+.folder-heading .folder-heading-name{flex:1;min-width:0;overflow-wrap:anywhere}
+.folder-heading .folder-count{margin-left:0;white-space:nowrap;flex:0 0 auto}
+.folder-actions-stack{display:flex;flex-direction:column;gap:4px;flex:0 0 27px;margin-left:auto;align-self:center}
+.folder-heading .folder-action-btn{display:inline-flex;align-items:center;justify-content:center;flex:0 0 27px;width:27px;min-width:27px;height:27px;padding:0;border-radius:7px;font-size:14px;line-height:1;white-space:nowrap}
+@media(max-width:560px){.folder-heading{flex-wrap:nowrap;gap:5px}.folder-heading .folder-heading-name{font-size:14px}.folder-heading .folder-count{font-size:10px}.folder-actions-stack{flex-basis:24px}.folder-heading .folder-action-btn{flex-basis:24px;width:24px;min-width:24px;height:24px}.folder-task-row{font-size:13px;padding:5px 7px}}
+
+</style>
 </head>
 <body>
 <section id="auth">
@@ -296,7 +305,7 @@ function renderFolderTaskRow(t){
   const priority=t.urgency==='TERMINATE'?'terminate':t.urgency==='срочно'?'urgent':t.urgency==='Посредственно'?'medium':'normal';
   return '<div class="folder-task-row priority-'+priority+(t.completed?' is-completed':'')+'" role="button" tabindex="0" onclick="openTaskFromCard(event,\''+t.id+'\')" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();openTaskFromCard(event,\''+t.id+'\')}">'+
     '<span class="folder-task-student">'+esc(t.student_name||'Без имени')+'</span>'+
-    '<span class="folder-task-actions"><button type="button" class="folder-task-edit" onclick="event.stopPropagation();editTask(\''+t.id+'\')" aria-label="Изменить задачу">✎</button><button type="button" class="folder-task-delete" onclick="event.stopPropagation();deleteTask(\''+t.id+'\')" aria-label="Удалить задачу">×</button></span>'+
+    ''+
     '</div>';
 }
 function render(){
@@ -317,7 +326,7 @@ function render(){
   if(cf.value)a=a.filter(t=>(t.class_name||'').trim()===cf.value);
   const sections=folders.map(folder=>{
     const items=a.filter(t=>t.folder_id===folder.id);
-    return '<section class="folder-section"><div class="folder-heading" data-folder-row="'+esc(folder.id)+'"><span aria-hidden="true">📁</span><span class="folder-heading-name">'+esc(folder.name)+'</span><span class="folder-count">'+items.length+' задач</span><button type="button" class="btn secondary folder-action-btn" onclick="event.stopPropagation();beginFolderRename(\''+folder.id+'\')" aria-label="Редактировать папку '+esc(folder.name)+'">✏️ Редактировать</button><button type="button" class="btn danger folder-action-btn" onclick="event.stopPropagation();deleteFolder(\''+folder.id+'\')" aria-label="Удалить папку '+esc(folder.name)+'">🗑️ Удалить</button></div><div class="folder-task-list">'+(items.length?items.map(renderFolderTaskRow).join(''):'<div class="folder-empty">В этой папке пока нет задач.</div>')+'</div></section>';
+    return '<section class="folder-section"><div class="folder-heading" data-folder-row="'+esc(folder.id)+'"><span aria-hidden="true">📁</span><span class="folder-heading-name">'+esc(folder.name)+'</span><span class="folder-count">'+items.length+' задач</span><span class="folder-actions-stack"><button type="button" class="btn secondary folder-action-btn" onclick="event.stopPropagation();beginFolderRename(\''+folder.id+'\')" aria-label="Редактировать папку '+esc(folder.name)+'" title="Редактировать папку">✎</button><button type="button" class="btn danger folder-action-btn" onclick="event.stopPropagation();deleteFolder(\''+folder.id+'\')" aria-label="Удалить папку '+esc(folder.name)+'" title="Удалить папку">×</button></span></div><div class="folder-task-list">'+(items.length?items.map(renderFolderTaskRow).join(''):'<div class="folder-empty">В этой папке пока нет задач.</div>')+'</div></section>';
   }).join('');
   const unfiled=a.filter(t=>!t.folder_id);
   $('list').innerHTML=sections+(unfiled.length?unfiled.map(renderTaskCard).join(''):'')||'<div class="empty">Папок и задач пока нет.<br>Нажмите «Добавить Папку» или «＋ Добавить задачу».</div>';
