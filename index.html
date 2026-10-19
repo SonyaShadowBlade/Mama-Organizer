@@ -471,7 +471,7 @@ $('logoutBtn').onclick=async()=>{
   localStorage.removeItem(LOGIN_KEY);
   session=null;stopRealtime();show('app',false);show('auth',true);
 };
-$('addBtn').onclick=()=>openModal();$('closeModal').onclick=closeModal;$('cancelBtn').onclick=closeModal;
+$('addBtn').onclick=()=>{openModal();const folderSelect=$('taskFolder');if(folderSelect)folderSelect.innerHTML='<option value="">Без папки</option>';};$('closeModal').onclick=closeModal;$('cancelBtn').onclick=closeModal;
 function toggleFolderDropdown(){
   const panel=$('folderDropdown'),open=panel.classList.contains('hidden');
   panel.classList.toggle('hidden',!open);
