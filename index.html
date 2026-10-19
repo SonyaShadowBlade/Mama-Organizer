@@ -32,7 +32,24 @@ input:focus,textarea:focus{border-color:#667eea;box-shadow:0 0 0 3px #667eea18}t
 .bottom-controls .btn{padding:9px 12px;font-size:13px}.scroll-top-btn{width:42px;height:42px;padding:0!important;font-size:20px!important;display:inline-flex;align-items:center;justify-content:center}
 .scroll-bottom-btn{width:42px;height:42px;padding:0!important;font-size:20px!important;display:inline-flex;align-items:center;justify-content:center}
 .sort.active{background:#dfe5ff;color:#273b9b}.filter-select{flex:1;min-width:0;appearance:auto}
-.deadline-visibility-toggle{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:10px;padding:9px 11px;border:1px solid #e3e7ee;border-radius:12px;background:#f8fafc;color:#4b5563;font-size:13px;font-weight:750;cursor:pointer;user-select:none}
+.deadline-visibility-toggle{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0;padding:9px 11px;border:1px solid #e3e7ee;border-radius:12px;background:#f8fafc;color:#4b5563;font-size:13px;font-weight:750;cursor:pointer;user-select:none;flex:1 1 100%}
+.folder-toolbar{position:relative;margin-top:10px}
+.folder-dropdown-btn{width:100%;display:flex;align-items:center;justify-content:flex-start;gap:9px;font-weight:800}
+.folder-dropdown-btn>span{font-size:20px;line-height:1}
+.folder-dropdown{position:absolute;top:calc(100% + 6px);left:0;right:0;z-index:15;background:#fff;border:1px solid #d5dbe5;border-radius:14px;padding:12px;box-shadow:0 12px 32px #11182722;max-height:min(65vh,520px);overflow:auto}
+.folder-create-form{display:flex;gap:8px;align-items:center}
+.folder-create-form input{min-width:0;flex:1}
+.folder-manager-list{display:grid;gap:7px;margin-top:10px}
+.folder-manager-row{display:flex;align-items:center;gap:7px;padding:8px;border:1px solid #e3e7ee;border-radius:10px}
+.folder-manager-name{min-width:0;flex:1;overflow-wrap:anywhere;font-weight:650}
+.folder-manager-row input{min-width:0;flex:1;padding:8px}
+.folder-manager-row .btn{padding:8px 10px;font-size:13px}
+.folder-manager-status{font-size:13px;color:#b42318;margin-top:7px}
+.folder-section{border:1px solid #dfe5ef;border-radius:15px;padding:10px;background:#eef2f8;display:grid;gap:9px}
+.folder-heading{display:flex;align-items:center;gap:8px;width:100%;text-align:left;background:transparent;color:#26344a;font-size:16px;font-weight:850;padding:4px 3px;overflow-wrap:anywhere}
+.folder-heading .folder-count{margin-left:auto;color:#687386;font-size:12px;font-weight:700}
+.folder-task-list{display:grid;gap:9px}
+.folder-empty{font-size:13px;color:#687386;padding:4px 3px}
 .deadline-visibility-toggle input{position:absolute;opacity:0;pointer-events:none;width:1px;height:1px}
 .toggle-track{position:relative;display:inline-flex;align-items:center;width:44px;height:24px;flex:0 0 44px;border-radius:999px;background:#cbd5e1;transition:.18s}
 .toggle-thumb{width:18px;height:18px;margin-left:3px;border-radius:50%;background:#fff;box-shadow:0 1px 4px #11182733;transition:.18s}
@@ -119,13 +136,17 @@ input:focus,textarea:focus{border-color:#667eea;box-shadow:0 0 0 3px #667eea18}t
           <button id="addBtn" class="btn primary">＋ Добавить задачу</button>
         </div>
       </div>
-      <label class="deadline-visibility-toggle" for="deadlineVisibilityToggle">
-        <button id="scrollBottomBtn" class="btn secondary scroll-bottom-btn" type="button" aria-label="Вниз" title="Перейти вниз">↓</button>
-        <span>Показывать DEADLINE и TimeToBOOM</span>
-        <input id="deadlineVisibilityToggle" type="checkbox" checked>
-        <span class="toggle-track" aria-hidden="true"><span class="toggle-thumb"></span></span>
-        <span id="deadlineVisibilityState" class="toggle-state">ON</span>
-      </label>
+      <div class="folder-toolbar">
+        <button id="folderDropdownBtn" class="btn secondary folder-dropdown-btn" type="button" aria-expanded="false"><span aria-hidden="true">↓</span> Добавить Папку</button>
+        <div id="folderDropdown" class="folder-dropdown hidden">
+          <form id="folderCreateForm" class="folder-create-form">
+            <input id="folderNameInput" type="text" maxlength="100" placeholder="Название новой папки" aria-label="Название новой папки" required>
+            <button class="btn primary" type="submit">Создать</button>
+          </form>
+          <div id="folderManagerList" class="folder-manager-list"></div>
+          <div id="folderManagerStatus" class="folder-manager-status"></div>
+        </div>
+      </div>
     </header>
     <div id="status" class="status"></div>
     <main id="list" class="list"></main>
@@ -134,6 +155,12 @@ input:focus,textarea:focus{border-color:#667eea;box-shadow:0 0 0 3px #667eea18}t
         <select id="studentFilter" class="btn secondary filter-select"><option value="">Все ученики</option></select>
         <select id="classFilter" class="btn secondary filter-select"><option value="">Все классы</option></select>
       </div>
+      <label class="deadline-visibility-toggle" for="deadlineVisibilityToggle">
+        <span>Показывать DEADLINE и TimeToBOOM</span>
+        <input id="deadlineVisibilityToggle" type="checkbox" checked>
+        <span class="toggle-track" aria-hidden="true"><span class="toggle-thumb"></span></span>
+        <span id="deadlineVisibilityState" class="toggle-state">ON</span>
+      </label>
       <button id="scrollTopBtn" class="btn secondary scroll-top-btn" type="button" aria-label="Вверх" title="Перейти вверх">↑</button>
       <button id="versionBtn" class="btn secondary" type="button">ℹ️ Проверить версию</button>
       <button id="logoutBtn" class="btn secondary" type="button">Выйти</button>
@@ -150,6 +177,7 @@ input:focus,textarea:focus{border-color:#667eea;box-shadow:0 0 0 3px #667eea18}t
       <div class="field"><label for="student">Имя ученика</label><textarea id="student" rows="2" placeholder="Имя и фамилия"></textarea></div>
       <div class="field"><div class="task-label-row"><label for="task">Задача</label><div id="richToolbar" class="rich-tools" aria-label="Форматирование задачи"><div class="rich-tool"><button type="button">Шрифт ▾</button><div class="rich-tool-panel"><button type="button" data-rich-action="font-down" title="Уменьшить">A−</button><button type="button" data-rich-action="font-up" title="Увеличить">A＋</button></div></div><div class="rich-tool"><button type="button">Выделить ▾</button><div class="rich-tool-panel"><button type="button" data-rich-action="bold"><b>Ж</b></button><button type="button" data-rich-action="italic"><i>К</i></button><button type="button" data-rich-action="underline"><u>Ч</u></button></div></div><div class="rich-tool"><button type="button">Заливка ▾</button><div class="rich-tool-panel"><button type="button" class="rich-color-btn" data-color="#facc15" title="Жёлтый"></button><button type="button" class="rich-color-btn" data-color="#fb7185" title="Розовый"></button><button type="button" class="rich-color-btn" data-color="#60a5fa" title="Голубой"></button><button type="button" class="rich-color-btn" data-color="#4ade80" title="Зелёный"></button><button type="button" class="rich-color-btn" data-color="#c084fc" title="Фиолетовый"></button><button type="button" class="rich-color-btn" data-color="#f97316" title="Оранжевый"></button><button type="button" class="rich-color-btn" data-color="#ffffff" title="Белый"></button><button type="button" class="rich-color-btn" data-color="#000000" title="Чёрный"></button></div></div><div class="rich-tool"><button type="button">Цвет ▾</button><div class="rich-tool-panel"><button type="button" class="rich-color-btn" data-text-color="#facc15" title="Жёлтый"></button><button type="button" class="rich-color-btn" data-text-color="#fb7185" title="Розовый"></button><button type="button" class="rich-color-btn" data-text-color="#60a5fa" title="Голубой"></button><button type="button" class="rich-color-btn" data-text-color="#4ade80" title="Зелёный"></button><button type="button" class="rich-color-btn" data-text-color="#c084fc" title="Фиолетовый"></button><button type="button" class="rich-color-btn" data-text-color="#f97316" title="Оранжевый"></button><button type="button" class="rich-color-btn" data-text-color="#ffffff" title="Белый"></button><button type="button" class="rich-color-btn" data-text-color="#000000" title="Чёрный"></button></div></div></div></div><div id="taskEditor" class="rich-editor" contenteditable="true" data-placeholder="Например: проверить контрольную"></div><textarea id="task" class="hidden" tabindex="-1" aria-hidden="true"></textarea></div>
       <div class="field"><label for="className">Класс</label><textarea id="className" rows="2" placeholder="Например: 7А"></textarea></div>
+      <div class="field"><label for="taskFolder">Папка</label><select id="taskFolder"><option value="">Без папки</option></select></div>
       <div class="field"><label for="notes">Примечание</label><textarea id="notes" placeholder="Дополнительная информация"></textarea></div>
       <div class="modal-actions"><button class="btn secondary" id="cancelBtn" type="button">Отмена</button><button class="btn primary" type="submit">Сохранить</button></div>
       <div id="formError" class="error"></div>
@@ -205,7 +233,7 @@ const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 const REMEMBER_KEY = 'mama_organizer_remember';
 const LOGIN_KEY = 'mama_organizer_login';
 
-let session = null, tasks = [], realtimeChannel = null;
+let session = null, tasks = [], folders = [], realtimeChannel = null;
 const DEADLINE_VISIBILITY_KEY = 'mama_organizer_deadline_visibility';
 let showCardDeadlines = localStorage.getItem(DEADLINE_VISIBILITY_KEY) !== '0';
 
@@ -213,6 +241,7 @@ function startRealtime(){
   if(realtimeChannel) return;
   realtimeChannel = sb.channel('tasks-realtime')
     .on('postgres_changes',{event:'*',schema:'public',table:'tasks'},async()=>{ await loadTasks(); })
+    .on('postgres_changes',{event:'*',schema:'public',table:'folders'},async()=>{ await loadTasks(); })
     .subscribe((status)=>{
       if(status==='SUBSCRIBED') setStatus('Онлайн · реалтайм включён');
     });
@@ -231,14 +260,38 @@ function setStatus(s){$('status').textContent=s||''}
 async function loadTasks(){
   if(!session)return;
   setStatus('Загрузка…');
-  const {data,error}=await sb.from('tasks').select('*').order('created_at',{ascending:false});
-  if(error){setStatus('Не удалось загрузить задачи: '+error.message);return}
-  tasks=data||[];tasks.sort((a,b)=>{const p={TERMINATE:0,'срочно':1,'Посредственно':2};return (p[a.urgency]??2)-(p[b.urgency]??2)||new Date(b.created_at)-new Date(a.created_at)});render();
+  const [folderResult,taskResult]=await Promise.all([
+    sb.from('folders').select('*').order('name',{ascending:true}),
+    sb.from('tasks').select('*').order('created_at',{ascending:false})
+  ]);
+  if(folderResult.error){setStatus('Не удалось загрузить папки: '+folderResult.error.message);return}
+  if(taskResult.error){setStatus('Не удалось загрузить задачи: '+taskResult.error.message);return}
+  folders=folderResult.data||[];
+  folders.sort((a,b)=>a.name.localeCompare(b.name,'ru',{numeric:true,sensitivity:'base'}));
+  tasks=taskResult.data||[];
+  tasks.sort((a,b)=>{const p={TERMINATE:0,'срочно':1,'Посредственно':2};return (p[a.urgency]??2)-(p[b.urgency]??2)||new Date(b.created_at)-new Date(a.created_at)});
+  render();
+  renderFolderManager();
 }
 function sanitizeTaskHtml(value=''){const box=document.createElement('div');box.innerHTML=String(value||'');box.querySelectorAll('script,style,iframe,object,embed,link,meta').forEach(el=>el.remove());box.querySelectorAll('*').forEach(el=>{[...el.attributes].forEach(a=>{const n=a.name.toLowerCase(),v=a.value||'';if(n.startsWith('on')||n==='id'||n==='class'||n==='contenteditable')el.removeAttribute(a.name);else if(n==='style'&&!/^(font-weight|font-style|text-decoration|font-size|background-color|color)\s*:/i.test(v))el.removeAttribute(a.name)})});return box.innerHTML||String(value||'')}function syncTaskEditor(){$('task').value=$('taskEditor').innerHTML.trim()}function formatDeadline(value){const d=new Date(value);if(Number.isNaN(d.getTime()))return '—';return d.toLocaleDateString('ru-RU',{day:'2-digit',month:'2-digit',year:'numeric'})+' '+d.toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'});}
 function timeToBoom(value){const ms=new Date(value).getTime()-Date.now();if(ms<=0)return '00 ч 00 мин 00 сек';const total=Math.floor(ms/1000),h=Math.floor(total/3600),m=Math.floor((total%3600)/60),s=total%60;return String(h).padStart(2,'0')+' ч '+String(m).padStart(2,'0')+' мин '+String(s).padStart(2,'0')+' сек';}
 function updateDeadlineTimers(){document.querySelectorAll('[data-timer-id]').forEach(el=>{const t=tasks.find(x=>x.id===el.dataset.timerId);if(t?.deadline)el.textContent=timeToBoom(t.deadline);});}
 setInterval(updateDeadlineTimers,1000);
+function renderTaskCard(t){
+  return `
+    <article class="task ${t.completed?'done':''} ${t.urgency==='TERMINATE'?'terminate':t.urgency==='срочно'?'urgent':''}" onclick="openTaskFromCard(event,'${t.id}')">
+      <div class="task-head">
+        <input class="check" type="checkbox" ${t.completed?'checked':''} onchange="toggleTask('${t.id}',this.checked)" aria-label="Выполнено">
+        <div class="task-main">
+          <div class="task-name">${esc(t.student_name)}</div>
+          <div class="meta">${sanitizeTaskHtml(t.task)}${t.class_name?' · '+esc(t.class_name):''}</div>
+          ${t.notes?'<div class="notes">'+esc(t.notes)+'</div>':''}
+          ${t.deadline?'<div class="card-deadlines"><div class="card-deadline-row"><span class="card-deadline-label">DEADLINE</span><span class="card-deadline-value">'+formatDeadline(t.deadline)+'</span></div><div class="card-deadline-row"><span class="card-deadline-label">TimeToBOOM</span><span class="card-deadline-value" data-timer-id="'+t.id+'">'+timeToBoom(t.deadline)+'</span></div></div>':''}
+          <div class="task-actions"><button class="btn secondary" onclick="editTask('${t.id}')">Изменить</button><button class="btn danger" onclick="deleteTask('${t.id}')">Удалить</button></div>
+        </div>
+      </div>
+    </article>`;
+}
 function render(){
   document.body.classList.toggle('deadlines-hidden',!showCardDeadlines);
   const toggle=$('deadlineVisibilityToggle'),state=$('deadlineVisibilityState');
@@ -255,21 +308,49 @@ function render(){
   if(classes.includes(oldClass))cf.value=oldClass;
   if(sf.value)a=a.filter(t=>(t.student_name||'').trim()===sf.value);
   if(cf.value)a=a.filter(t=>(t.class_name||'').trim()===cf.value);
-  $('list').innerHTML=a.length?a.map(t=>`
-    <article class="task ${t.completed?'done':''} ${t.urgency==='TERMINATE'?'terminate':t.urgency==='срочно'?'urgent':''}" onclick="openTaskFromCard(event,\'${t.id}\')">
-      <div class="task-head">
-        <input class="check" type="checkbox" ${t.completed?'checked':''} onchange="toggleTask('${t.id}',this.checked)" aria-label="Выполнено">
-        <div class="task-main">
-          <div class="task-name">${esc(t.student_name)}</div>
-          <div class="meta">${sanitizeTaskHtml(t.task)}${t.class_name?' · '+esc(t.class_name):''}</div>
-          ${t.notes?'<div class="notes">'+esc(t.notes)+'</div>':''}
-          ${t.deadline?'<div class="card-deadlines"><div class="card-deadline-row"><span class="card-deadline-label">DEADLINE</span><span class="card-deadline-value">'+formatDeadline(t.deadline)+'</span></div><div class="card-deadline-row"><span class="card-deadline-label">TimeToBOOM</span><span class="card-deadline-value" data-timer-id="'+t.id+'">'+timeToBoom(t.deadline)+'</span></div></div>':''}
-          <div class="task-actions"><button class="btn secondary" onclick="editTask('${t.id}')">Изменить</button><button class="btn danger" onclick="deleteTask('${t.id}')">Удалить</button></div>
-        </div>
-      </div>
-    </article>`).join(''):'<div class="empty">Задач пока нет.<br>Нажмите «＋ Добавить задачу».</div>';
+  const sections=folders.map(folder=>{
+    const items=a.filter(t=>t.folder_id===folder.id);
+    return '<section class="folder-section"><div class="folder-heading"><span aria-hidden="true">📁</span><span>'+esc(folder.name)+'</span><span class="folder-count">'+items.length+' задач</span></div><div class="folder-task-list">'+(items.length?items.map(renderTaskCard).join(''):'<div class="folder-empty">В этой папке пока нет задач.</div>')+'</div></section>';
+  }).join('');
+  const unfiled=a.filter(t=>!t.folder_id);
+  $('list').innerHTML=sections+(unfiled.length?unfiled.map(renderTaskCard).join(''):'')||'<div class="empty">Папок и задач пока нет.<br>Нажмите «Добавить Папку» или «＋ Добавить задачу».</div>';
   setStatus('Всего задач: '+tasks.length+(tasks.filter(t=>t.completed).length?' · выполнено: '+tasks.filter(t=>t.completed).length:''));
+  renderTaskFolderOptions();
 }
+function renderTaskFolderOptions(){
+  const select=$('taskFolder');
+  if(!select)return;
+  const selected=select.value;
+  select.innerHTML='<option value="">Без папки</option>'+folders.map(f=>'<option value="'+esc(f.id)+'">'+esc(f.name)+'</option>').join('');
+  if(folders.some(f=>f.id===selected))select.value=selected;
+}
+function renderFolderManager(){
+  const list=$('folderManagerList');
+  if(!list)return;
+  list.innerHTML=folders.map(f=>`<div class="folder-manager-row" data-folder-row="${f.id}">
+    <span class="folder-manager-name">📁 ${esc(f.name)}</span>
+    <button type="button" class="btn secondary" onclick="beginFolderRename('${f.id}')">✏️</button>
+    <button type="button" class="btn danger" onclick="deleteFolder('${f.id}')">🗑️</button>
+  </div>`).join('')||'<div class="folder-empty">Папок пока нет. Создайте первую выше.</div>';
+  renderTaskFolderOptions();
+}
+window.beginFolderRename=id=>{
+  const folder=folders.find(f=>f.id===id);if(!folder)return;
+  const row=document.querySelector('[data-folder-row="'+id+'"]');if(!row)return;
+  row.innerHTML='<input type="text" maxlength="100" aria-label="Новое название папки" value="'+esc(folder.name)+'"><button type="button" class="btn primary">Сохранить</button><button type="button" class="btn secondary">Отмена</button>';
+  const input=row.querySelector('input'),buttons=row.querySelectorAll('button');
+  buttons[0].onclick=async()=>{const name=input.value.trim();if(!name){$('folderManagerStatus').textContent='Введите название папки.';return}const {error}=await sb.from('folders').update({name,updated_at:new Date().toISOString()}).eq('id',id);if(error){$('folderManagerStatus').textContent=error.code==='23505'?'Папка с таким названием уже существует.':error.message;return}$('folderManagerStatus').textContent='';await loadTasks();};
+  buttons[1].onclick=renderFolderManager;
+  input.focus();input.select();
+};
+window.deleteFolder=async id=>{
+  const folder=folders.find(f=>f.id===id);if(!folder)return;
+  if(!confirm('Удалить папку «'+folder.name+'»? Задачи останутся и будут перемещены в список без папки.'))return;
+  const {error}=await sb.from('folders').delete().eq('id',id);
+  if(error){$('folderManagerStatus').textContent='Не удалось удалить папку: '+error.message;return}
+  $('folderManagerStatus').textContent='';await loadTasks();
+};
+
 function fillDeadlineOptions(){
   const d=$('deadlineDay'),m=$('deadlineMonth'),y=$('deadlineYear'),tm=$('deadlineTime');
   d.innerHTML=Array.from({length:31},(_,i)=>'<option value="'+String(i+1).padStart(2,'0')+'">'+(i+1)+'</option>').join('');
@@ -322,6 +403,7 @@ function openModal(t=null){
   if(!modalHistoryOpen){history.pushState({modal:true},'',window.location.pathname+'#edit');modalHistoryOpen=true}
   fillDeadlineOptions();
   $('taskId').value=t?.id||'';$('task').value=t?.task||'';$('taskEditor').innerHTML=sanitizeTaskHtml(t?.task||'');$('student').value=t?.student_name||'';$('className').value=t?.class_name||'';$('notes').value=t?.notes||'';$('urgency').value=t?.urgency||'Посредственно';
+  renderTaskFolderOptions();$('taskFolder').value=t?.folder_id||'';
   setDeadlineValue(t?.deadline||null);setNotificationOptions(t?.notification_enabled,t?.notification_offsets||[]);
   $('modalTitle').textContent=t?'Изменить задачу':'Новая задача';$('formError').textContent='';show('modal',true);setTimeout(()=>$('task').focus(),50);
 }
@@ -329,7 +411,7 @@ function closeModal(){show('modal',false);modalHistoryOpen=false;history.replace
 async function saveTask(e){
   e.preventDefault();syncTaskEditor();$('formError').textContent='';
   const offsets=getNotificationOffsets();const notifyEnabled=$('notifyEnabled').checked&&offsets.length>0;
-  const payload={task:$('task').value.trim(),student_name:$('student').value.trim(),class_name:$('className').value.trim(),notes:$('notes').value.trim(),urgency:$('urgency').value,deadline:getDeadlineValue(),notification_enabled:notifyEnabled,notification_offsets:offsets,updated_at:new Date().toISOString()};
+  const payload={task:$('task').value.trim(),student_name:$('student').value.trim(),class_name:$('className').value.trim(),folder_id:$('taskFolder').value||null,notes:$('notes').value.trim(),urgency:$('urgency').value,deadline:getDeadlineValue(),notification_enabled:notifyEnabled,notification_offsets:offsets,updated_at:new Date().toISOString()};
   if(!payload.task){$('formError').textContent='Введите задачу.';return}
   const id=$('taskId').value;
   const q=id?sb.from('tasks').update(payload).eq('id',id):sb.from('tasks').insert(payload);
@@ -389,6 +471,20 @@ $('logoutBtn').onclick=async()=>{
   session=null;stopRealtime();show('app',false);show('auth',true);
 };
 $('addBtn').onclick=()=>openModal();$('closeModal').onclick=closeModal;$('cancelBtn').onclick=closeModal;
+$('folderDropdownBtn').addEventListener('click',()=>{
+  const panel=$('folderDropdown'),open=panel.classList.contains('hidden');
+  panel.classList.toggle('hidden',!open);$('folderDropdownBtn').setAttribute('aria-expanded',open?'true':'false');
+  if(open){$('folderManagerStatus').textContent='';renderFolderManager();}
+});
+$('folderCreateForm').addEventListener('submit',async e=>{
+  e.preventDefault();const name=$('folderNameInput').value.trim();
+  if(!name){$('folderManagerStatus').textContent='Введите название папки.';return}
+  const {error}=await sb.from('folders').insert({name});
+  if(error){$('folderManagerStatus').textContent=error.code==='23505'?'Папка с таким названием уже существует.':error.message;return}
+  $('folderNameInput').value='';$('folderManagerStatus').textContent='';await loadTasks();$('folderNameInput').focus();
+});
+document.addEventListener('click',e=>{if(!$('folderDropdown').contains(e.target)&&!$('folderDropdownBtn').contains(e.target)){$('folderDropdown').classList.add('hidden');$('folderDropdownBtn').setAttribute('aria-expanded','false')}});
+
 let richSavedRange=null;
 let richFontLevel=0;
 let richToolbarLocked=false;
@@ -476,7 +572,6 @@ window.addEventListener('scroll',positionRichToolbar,true);
 $('modal').addEventListener('click',e=>{if(e.target===$('modal'))closeModal()});
 $('taskForm').addEventListener('submit',saveTask);
 $('studentFilter').onchange=render;$('classFilter').onchange=render;
-$('scrollBottomBtn').addEventListener('click',()=>{window.scrollTo({top:document.documentElement.scrollHeight,behavior:'smooth'});});
 $('scrollTopBtn').addEventListener('click',()=>{window.scrollTo({top:0,behavior:'smooth'});});
 $('deadlineVisibilityToggle').addEventListener('change',e=>{
   showCardDeadlines=e.target.checked;
@@ -492,7 +587,6 @@ sb.auth.onAuthStateChange((_event,s)=>{
   if(s){
     startRealtime();
     show('auth',false);show('app',true);
-    $('userLine').textContent=s.user.email||'';
     loadTasks();
   }else{
     show('app',false);show('auth',true);
