@@ -137,7 +137,7 @@ input:focus,textarea:focus{border-color:#667eea;box-shadow:0 0 0 3px #667eea18}t
         </div>
       </div>
       <div class="folder-toolbar">
-        <button id="folderArrowBtn" class="btn secondary folder-arrow-btn" type="button" aria-label="Открыть список папок" title="Открыть список папок" aria-expanded="false">↓</button>
+        <button id="folderArrowBtn" class="btn secondary folder-arrow-btn" type="button" aria-label="Плавно перейти вниз страницы" title="Плавно перейти вниз страницы">↓</button>
         <button id="folderDropdownBtn" class="btn secondary folder-dropdown-btn" type="button" aria-expanded="false">Добавить Папку</button>
         <div id="folderDropdown" class="folder-dropdown hidden">
           <form id="folderCreateForm" class="folder-create-form">
@@ -195,7 +195,7 @@ input:focus,textarea:focus{border-color:#667eea;box-shadow:0 0 0 3px #667eea18}t
 </div>
 
 <script>
-const APP_VERSION = "0.1.13";
+const APP_VERSION = "0.1.14";
 history.replaceState({appBase:true},'',window.location.pathname);history.pushState({appRoot:true},'',window.location.pathname);
 function showVersionCheck(text, success=false){const bg=$("versionCheckBg"),textEl=$("versionCheckText"),spinner=$("versionCheckSpinner");if(!bg||!textEl||!spinner)return;bg.style.display="flex";textEl.textContent=text;spinner.style.display=success?"none":"block"}
 function closeVersionCheck(){const bg=$("versionCheckBg");if(bg)bg.style.display="none"}
@@ -481,7 +481,7 @@ function toggleFolderDropdown(){
   if(open){$('folderManagerStatus').textContent='';renderFolderManager();}
 }
 $('folderDropdownBtn').addEventListener('click',toggleFolderDropdown);
-$('folderArrowBtn').addEventListener('click',toggleFolderDropdown);
+$('folderArrowBtn').addEventListener('click',()=>{window.scrollTo({top:document.documentElement.scrollHeight,behavior:'smooth'});});
 $('folderCreateForm').addEventListener('submit',async e=>{
   e.preventDefault();const name=$('folderNameInput').value.trim();
   if(!name){$('folderManagerStatus').textContent='Введите название папки.';return}
