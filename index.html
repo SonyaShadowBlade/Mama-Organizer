@@ -187,7 +187,7 @@ input:focus,textarea:focus{border-color:#667eea;box-shadow:0 0 0 3px #667eea18}t
       <div class="field"><label for="student">Имя ученика</label><textarea id="student" rows="2" placeholder="Имя и фамилия"></textarea></div>
       <div class="field"><div class="task-label-row"><label for="task">Задача</label><div id="richToolbar" class="rich-tools" aria-label="Форматирование задачи"><div class="rich-tool"><button type="button">Шрифт ▾</button><div class="rich-tool-panel"><button type="button" data-rich-action="font-down" title="Уменьшить">A−</button><button type="button" data-rich-action="font-up" title="Увеличить">A＋</button></div></div><div class="rich-tool"><button type="button">Выделить ▾</button><div class="rich-tool-panel"><button type="button" data-rich-action="bold"><b>Ж</b></button><button type="button" data-rich-action="italic"><i>К</i></button><button type="button" data-rich-action="underline"><u>Ч</u></button></div></div><div class="rich-tool"><button type="button">Заливка ▾</button><div class="rich-tool-panel"><button type="button" class="rich-color-btn" data-color="#facc15" title="Жёлтый"></button><button type="button" class="rich-color-btn" data-color="#fb7185" title="Розовый"></button><button type="button" class="rich-color-btn" data-color="#60a5fa" title="Голубой"></button><button type="button" class="rich-color-btn" data-color="#4ade80" title="Зелёный"></button><button type="button" class="rich-color-btn" data-color="#c084fc" title="Фиолетовый"></button><button type="button" class="rich-color-btn" data-color="#f97316" title="Оранжевый"></button><button type="button" class="rich-color-btn" data-color="#ffffff" title="Белый"></button><button type="button" class="rich-color-btn" data-color="#000000" title="Чёрный"></button></div></div><div class="rich-tool"><button type="button">Цвет ▾</button><div class="rich-tool-panel"><button type="button" class="rich-color-btn" data-text-color="#facc15" title="Жёлтый"></button><button type="button" class="rich-color-btn" data-text-color="#fb7185" title="Розовый"></button><button type="button" class="rich-color-btn" data-text-color="#60a5fa" title="Голубой"></button><button type="button" class="rich-color-btn" data-text-color="#4ade80" title="Зелёный"></button><button type="button" class="rich-color-btn" data-text-color="#c084fc" title="Фиолетовый"></button><button type="button" class="rich-color-btn" data-text-color="#f97316" title="Оранжевый"></button><button type="button" class="rich-color-btn" data-text-color="#ffffff" title="Белый"></button><button type="button" class="rich-color-btn" data-text-color="#000000" title="Чёрный"></button></div></div></div></div><div id="taskEditor" class="rich-editor" contenteditable="true" data-placeholder="Например: проверить контрольную"></div><textarea id="task" class="hidden" tabindex="-1" aria-hidden="true"></textarea></div>
       <div class="field"><label for="className">Класс</label><textarea id="className" rows="2" placeholder="Например: 7А"></textarea></div>
-      <div class="field"><label for="taskFolder">Папка</label><select id="taskFolder"><option value="">Без папки</option></select></div>
+      <div class="field"><label for="taskFolder">Папка</label><select id="taskFolder"><option value="">Без папки</option></select><button id="taskAddFolderBtn" class="btn secondary" type="button" style="margin-top:8px;width:100%">＋ Добавить папку</button><div id="taskAddFolderPanel" class="hidden" style="margin-top:8px;display:none;gap:8px;align-items:center"><input id="taskNewFolderName" type="text" maxlength="100" placeholder="Название новой папки" aria-label="Название новой папки" style="min-width:0;flex:1"><button id="taskSaveFolderBtn" class="btn primary" type="button">Добавить</button><button id="taskCancelFolderBtn" class="btn secondary" type="button">Отмена</button></div><div id="taskFolderStatus" class="folder-manager-status"></div></div>
       <div class="field"><label for="notes">Примечание</label><textarea id="notes" placeholder="Дополнительная информация"></textarea></div>
       <div class="modal-actions"><button class="btn secondary" id="cancelBtn" type="button">Отмена</button><button class="btn primary" type="submit">Сохранить</button></div>
       <div id="formError" class="error"></div>
@@ -435,6 +435,30 @@ function openModal(t=null){
   $('modalTitle').textContent=t?'Изменить задачу':'Новая задача';$('formError').textContent='';show('modal',true);setTimeout(()=>$('task').focus(),50);
 }
 function closeModal(){show('modal',false);modalHistoryOpen=false;history.replaceState(null,'',window.location.pathname)}
+function toggleTaskAddFolder(){
+  const panel=$('taskAddFolderPanel'),opening=panel.classList.contains('hidden');
+  panel.classList.toggle('hidden',!opening);panel.style.display=opening?'flex':'none';
+  $('taskFolderStatus').textContent='';
+  if(opening){$('taskNewFolderName').value='';setTimeout(()=>$('taskNewFolderName').focus(),0);}
+}
+$('taskAddFolderBtn').addEventListener('click',toggleTaskAddFolder);
+$('taskCancelFolderBtn').addEventListener('click',()=>{ $('taskAddFolderPanel').classList.add('hidden');$('taskAddFolderPanel').style.display='none';$('taskFolderStatus').textContent=''; });
+async function createFolderFromTaskModal(){
+  const name=$('taskNewFolderName').value.trim();
+  if(!name){$('taskFolderStatus').textContent='Введите название папки.';$('taskNewFolderName').focus();return}
+  $('taskSaveFolderBtn').disabled=true;$('taskFolderStatus').textContent='';
+  const {data,error}=await sb.from('folders').insert({name}).select().single();
+  $('taskSaveFolderBtn').disabled=false;
+  if(error){$('taskFolderStatus').textContent=error.code==='23505'?'Папка с таким названием уже существует.':'Не удалось создать папку: '+error.message;return}
+  const previous=$('taskFolder').value;
+  await loadTasks();
+  renderTaskFolderOptions();
+  $('taskFolder').value=data?.id||folders.find(f=>f.name===name)?.id||previous||'';
+  $('taskNewFolderName').value='';$('taskFolderStatus').textContent='Папка добавлена.';
+  $('taskAddFolderPanel').classList.add('hidden');$('taskAddFolderPanel').style.display='none';
+}
+$('taskSaveFolderBtn').addEventListener('click',createFolderFromTaskModal);
+$('taskNewFolderName').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();createFolderFromTaskModal();}});
 async function saveTask(e){
   e.preventDefault();syncTaskEditor();$('formError').textContent='';
   const offsets=getNotificationOffsets();const notifyEnabled=$('notifyEnabled').checked&&offsets.length>0;
